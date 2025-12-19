@@ -58,6 +58,7 @@ PROGRAM qe_converse
   USE orbital_magnetization, ONLY : dvrs
   USE cellmd,           ONLY : cell_factor
   USE nmr_mod
+  USE dudk_storage,     ONLY : dudk_in_memory
 
   IMPLICIT NONE
 
@@ -72,7 +73,8 @@ PROGRAM qe_converse
                         verbosity, q_gipaw, dudk_method, &
                         diago_thr_init, conv_threshold, &
                         tr2, mixing_beta, assume_isolated, &
-                        lambda_so, m_0, m_0_atom, delete_dudk_files
+                        lambda_so, m_0, m_0_atom, delete_dudk_files, &
+                        dudk_in_memory
 
 ! begin with the initialization part                
 #if defined(__MPI)
@@ -103,6 +105,7 @@ if (.not. ionode .or. my_image_id > 0) goto 400
   lambda_so(:) = 0.d0
   m_0(:) = 0.d0
   delete_dudk_files = .false.
+  dudk_in_memory = .false.
 
     read ( 5, input_qeconverse, iostat = ios )
   tmp_dir = outdir
@@ -173,7 +176,8 @@ SUBROUTINE gipaw_bcast_input
   !
   USE gipaw_module
   USE nmr_mod
-  USE control_flags, ONLY : tr2, mixing_beta, iverbosity 
+  USE dudk_storage,  ONLY : dudk_in_memory
+  USE control_flags, ONLY : tr2, mixing_beta, iverbosity
   USE mp_world,      ONLY : world_comm
   USE mp,            ONLY : mp_bcast
   USE io_files, ONLY : prefix, tmp_dir
@@ -199,6 +203,7 @@ SUBROUTINE gipaw_bcast_input
   CALL mp_bcast ( m_0_atom, root, world_comm )
   CALL mp_bcast ( assume_isolated, root, world_comm )
   call mp_bcast ( delete_dudk_files, root, world_comm )
+  call mp_bcast ( dudk_in_memory, root, world_comm )
 
 
 END SUBROUTINE gipaw_bcast_input
