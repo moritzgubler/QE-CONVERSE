@@ -13,7 +13,7 @@
 SUBROUTINE compute_dudk_new(dudk_method)
   USE kinds,         ONLY : dp
   USE wvfct,         ONLY : npw, nbnd, npwx
-  USE klist,         ONLY : nks, lgauss 
+  USE klist,         ONLY : nks, lgauss
   USE cell_base,     ONLY : tpiba
   USE io_global,     ONLY : stdout
   USE mp_global,     ONLY : my_pool_id, me_pool, root_pool
@@ -31,10 +31,13 @@ USE orbital_magnetization, ONLY : &
        om_dudk_name_y  => dudk_name_y, &
        om_dudk_name_z  => dudk_name_z
 
+  USE dudk_storage,  ONLY : dudk_in_memory, allocate_dudk_storage, &
+                            store_dudk, get_dudk_memory_mb
+
   implicit none
   character(80), intent(in) :: dudk_method
   complex(dp), allocatable :: dudk(:,:,:)
-  real(dp):: emin, emax
+  real(dp):: emin, emax, mem_mb
   logical :: exst
   integer :: ik, ipol, occ
   integer, parameter :: iundudk1 = 75, iundudk2 = 76, iundudk3 = 77
@@ -52,28 +55,37 @@ if ( any(m_0 /= 0.0_dp) .and. any(lambda_so /= 0.0_dp) ) then
 end if
 
 ! --------------------------------------------------------------
-! NMR mode
+! Allocate in-memory storage if requested
 ! --------------------------------------------------------------
-if (any(m_0 /= 0.0_dp)) then
-    call diropn(iundudk1, nmr_dudk_name_x(), 2*nwordwfc, exst)
-    call diropn(iundudk2, nmr_dudk_name_y(), 2*nwordwfc, exst)
-    call diropn(iundudk3, nmr_dudk_name_z(), 2*nwordwfc, exst)
+if (dudk_in_memory) then
+    mem_mb = get_dudk_memory_mb(npwx, nbnd, nks)
+    write(stdout,'(5X,''Allocating in-memory storage for dudk'')')
+    write(stdout,'(5X,''Memory required: '',F10.2,'' MB'')') mem_mb
+    call allocate_dudk_storage(npwx, nbnd, nks)
+end if
 
 ! --------------------------------------------------------------
-! g-tensor mode
+! Open files for disk storage (only if not using in-memory storage)
 ! --------------------------------------------------------------
-else if (any(lambda_so /= 0.0_dp)) then
-    call diropn(iundudk1, om_dudk_name_x(), 2*nwordwfc, exst)
-    call diropn(iundudk2, om_dudk_name_y(), 2*nwordwfc, exst)
-    call diropn(iundudk3, om_dudk_name_z(), 2*nwordwfc, exst)
+if (.not. dudk_in_memory) then
+  ! NMR mode
+  if (any(m_0 /= 0.0_dp)) then
+      call diropn(iundudk1, nmr_dudk_name_x(), 2*nwordwfc, exst)
+      call diropn(iundudk2, nmr_dudk_name_y(), 2*nwordwfc, exst)
+      call diropn(iundudk3, nmr_dudk_name_z(), 2*nwordwfc, exst)
 
-! --------------------------------------------------------------
-! No mode selected → fatal error
-! --------------------------------------------------------------
-else
-    write(stdout,*) "compute_dudk_new: no selection (m_0 = 0, lambda_so = 0)"
-    call errore("compute_dudk_new", &
-                "unable to determine whether this is an NMR or g-tensor calculation", 1)
+  ! g-tensor mode
+  else if (any(lambda_so /= 0.0_dp)) then
+      call diropn(iundudk1, om_dudk_name_x(), 2*nwordwfc, exst)
+      call diropn(iundudk2, om_dudk_name_y(), 2*nwordwfc, exst)
+      call diropn(iundudk3, om_dudk_name_z(), 2*nwordwfc, exst)
+
+  ! No mode selected → fatal error
+  else
+      write(stdout,*) "compute_dudk_new: no selection (m_0 = 0, lambda_so = 0)"
+      call errore("compute_dudk_new", &
+                  "unable to determine whether this is an NMR or g-tensor calculation", 1)
+  end if
 end if
  
   
@@ -87,26 +99,34 @@ end if
     write(stdout,'(''(read from disk)'')')
 
   elseif (trim(dudk_method) == 'covariant') then
-    write(stdout,'(''(covariant derivative)'')') 
+    write(stdout,'(''(covariant derivative)'')')
     do ik = 1, nks
     call find_nbnd_occ(ik, occ, emin, emax)
     write(stdout,'(5X,''k-point:'',I4,4X,''occ='',I3)') ik, occ
     call dudk_covariant(ik, occ, dudk)
     do ipol = 1, 3
-        call davcio( dudk(1,1,ipol), 2*nwordwfc, iundudk1 + ipol - 1, ik, +1 )
+        if (dudk_in_memory) then
+            call store_dudk(dudk(:,:,ipol), ik, ipol, npw, nbnd)
+        else
+            call davcio( dudk(1,1,ipol), 2*nwordwfc, iundudk1 + ipol - 1, ik, +1 )
+        endif
     enddo
     enddo
 
 
   elseif (trim(dudk_method) == 'singlepoint') then
-    write(stdout,'(''(single point)'')') 
+    write(stdout,'(''(single point)'')')
     do ik = 1, nks
     call find_nbnd_occ(ik, occ, emin, emax)
     write(stdout,'(5X,''k-point:'',I4,4X,''occ='',I3)') ik, occ
     call dudk_covariant_single_point(ik, occ, dudk)
 !    call dudk_covariant_single_point_old(ik, occ, dudk)
     do ipol = 1, 3
-        call davcio( dudk(1,1,ipol), 2*nwordwfc, iundudk1 + ipol - 1, ik, +1 )
+        if (dudk_in_memory) then
+            call store_dudk(dudk(:,:,ipol), ik, ipol, npw, nbnd)
+        else
+            call davcio( dudk(1,1,ipol), 2*nwordwfc, iundudk1 + ipol - 1, ik, +1 )
+        endif
     enddo
     enddo
 

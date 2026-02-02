@@ -4,3 +4,7 @@
 *.status
 config.log
 makedeps.sh
+config.status
+makedeps.sh
+make.depend
+src/Makefile

@@ -135,7 +135,8 @@ Description: Atom index carrying the nuclear magnetic dipole.
 \item[delete\_dudk\_files] (type: logical, default: \texttt{.false.})\\
 Description: If \texttt{.true.}, temporary du/dk files (wavefunction k-derivatives) are deleted after the orbital magnetization calculation.
 
-
+\item[dudk\_in\_memory] (type: logical, default: \texttt{.false.})\\
+Description: If \texttt{.true.}, du/dk gradients (wavefunction k-derivatives) are stored in memory rather than written to disk. This is useful when there is enough memory to store these gradients.
 
 
 \end{description}

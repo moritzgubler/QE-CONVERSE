@@ -30,6 +30,7 @@ CONVERSE_OBJS = electrons_gipaw.o \
                 gipaw_module.o \
                 nmr_routine.o \
                 nmr_module.o \
+                dudk_storage.o \
                 gipaw_setup.o \
                 init_us_2_no_phase.o \
                 compute_u_kq.o \

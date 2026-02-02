@@ -37,6 +37,8 @@
   USE control_flags,         ONLY : iverbosity
   USE orbital_magnetization
   USE nmr_mod
+  USE dudk_storage,          ONLY : dudk_in_memory, retrieve_dudk, &
+                                    deallocate_dudk_storage
 
   implicit none
   complex(dp), external :: ZDOTC
@@ -131,8 +133,13 @@
       ii = ind(1,kk)
       jj = ind(2,kk)
       ! read the bra and the ket
-      call davcio(dudk_bra, 2*nwordwfc, iundudk1 + ii - 1, ik, -1)
-      call davcio(dudk_ket, 2*nwordwfc, iundudk1 + jj - 1, ik, -1)
+      if (dudk_in_memory) then
+        call retrieve_dudk(dudk_bra, ik, ii, ngk(ik), nbnd)
+        call retrieve_dudk(dudk_ket, ik, jj, ngk(ik), nbnd)
+      else
+        call davcio(dudk_bra, 2*nwordwfc, iundudk1 + ii - 1, ik, -1)
+        call davcio(dudk_ket, 2*nwordwfc, iundudk1 + jj - 1, ik, -1)
+      endif
       
       ! compute the orbital magnetization
       kp_berry(kk) = 0.d0
@@ -197,15 +204,22 @@
   ! no reduction for delta_M_bare and delta_M_para and delta_M_dia 
 
 
-  ! close files
-  if (delete_dudk_files) then
-    close(unit=iundudk1, status='delete')
-    close(unit=iundudk2, status='delete')
-    close(unit=iundudk3, status='delete')
-  else
-    close(unit=iundudk1, status='keep')
-    close(unit=iundudk2, status='keep')
-    close(unit=iundudk3, status='keep')
+  ! close files (only if not using in-memory storage)
+  if (.not. dudk_in_memory) then
+    if (delete_dudk_files) then
+      close(unit=iundudk1, status='delete')
+      close(unit=iundudk2, status='delete')
+      close(unit=iundudk3, status='delete')
+    else
+      close(unit=iundudk1, status='keep')
+      close(unit=iundudk2, status='keep')
+      close(unit=iundudk3, status='keep')
+    endif
+  endif
+
+  ! deallocate in-memory storage if it was used
+  if (dudk_in_memory) then
+    call deallocate_dudk_storage()
   endif
 
   orb_magn_tot = orb_magn_LC + orb_magn_IC + &
