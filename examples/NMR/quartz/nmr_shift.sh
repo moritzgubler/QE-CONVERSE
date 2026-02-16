@@ -29,7 +29,7 @@ do
 /
 EOF
 
-mpirun -np 6 "your_path"/bin/qe-converse.x < ${base}.in > ${base}.out
+mpirun -np 6 ~/Desktop/QE-CONVERSE-7.5/bin/qe-converse.x < ${base}.in > ${base}.out
 
 done
 done

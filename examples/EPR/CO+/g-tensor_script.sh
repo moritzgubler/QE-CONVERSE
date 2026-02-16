@@ -1,5 +1,5 @@
 #!/bin/sh
-NAME="co+_gtensor"
+NAME="co+_gtensor.sp"
 
 for DIR in 1 2 3 
 do
@@ -11,7 +11,7 @@ cat > ${NAME}_${DIR}.in << EOF
         diagonalization = 'david'
         verbosity = 'high'
         q_gipaw = 0.01
-        dudk_method = 'covariant'
+        dudk_method = 'singlepoint'
         diago_thr_init = 1d-4
         conv_threshold = 1d-8
         mixing_beta = 0.5

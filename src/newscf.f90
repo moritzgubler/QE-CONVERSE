@@ -9,7 +9,8 @@ SUBROUTINE newscf
   USE fft_base,  ONLY : dfftp, dffts
   USE scf,       ONLY : rho, rho_core
   USE xc_lib,    ONLY : xclib_set_threshold, dmxc
-  USE basis, ONLY: starting_wfc, starting_pot, natomwfc
+  USE basis, ONLY: natomwfc
+  USE starting_scf, ONLY : starting_wfc, starting_pot
   USE cellmd,ONLY: lmovecell
   USE gvecs, ONLY: doublegrid
   USE gvect, ONLY: gstart

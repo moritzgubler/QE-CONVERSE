@@ -286,8 +286,8 @@ SUBROUTINE dudk_covariant_single_point(ik, occ, dudk)
   USE kinds,     ONLY : dp  
   USE cell_base, ONLY : bg, tpiba, at
   USE gvect,     ONLY : ngm, g
-  USE klist,     ONLY : igk_k
-  USE wvfct,     ONLY : npw, nbnd, npwx 
+  USE klist,     ONLY : igk_k, ngk
+  USE wvfct,     ONLY : nbnd, npwx 
   USE wavefunctions,    ONLY : evc
 !  USE gvecs  ,          ONLY : nls, nlsm
   USE fft_base,         ONLY : dffts
@@ -305,6 +305,7 @@ SUBROUTINE dudk_covariant_single_point(ik, occ, dudk)
   complex(dp) :: dudk(npwx,nbnd,3)
   integer :: ibnd, jbnd, ipol
   integer :: nls, nlm
+  integer :: npw_ik
   complex(dp), allocatable :: overlap(:,:)
   complex(dp), allocatable :: tmp(:,:)
   real(dp) :: bmod, q_gipaw3(3)
@@ -315,13 +316,17 @@ SUBROUTINE dudk_covariant_single_point(ik, occ, dudk)
 !!! nlm = dffts%nlm
   if (occ == 0) return
 
+  npw_ik = ngk(ik)
+  evq(:,:) = (0.d0, 0.d0)  !zero evq
+
+
 !  allocate real space wfcs
   allocate ( psir(dffts%nnr,occ), aux(dffts%nnr), aux2(dffts%nnr,occ))
   call get_buffer(evc, nwordwfc, iunwfc, ik)
   ! transform the wfcs to real space
   do ibnd = 1, occ
     aux(:) = (0.d0, 0.d0)
-    aux(dffts%nl(igk_k(1:npw,ik))) = evc(1:npw,ibnd)
+    aux(dffts%nl(igk_k(1:npw_ik,ik))) = evc(1:npw_ik,ibnd)
     CALL invfft ('Wave', aux, dffts)
     psir(:,ibnd) = aux(:)
   enddo
@@ -342,13 +347,13 @@ SUBROUTINE dudk_covariant_single_point(ik, occ, dudk)
       do ibnd = 1, occ
         call multiply_iqr(sig, dffts, bg(:,ipol), psir(:,ibnd), aux2(:,ibnd))
         call fwfft ('Wave', aux2(:,ibnd), dffts)
-        evq(:,ibnd) = aux2(dffts%nl(igk_k(1:npw,ik)),ibnd)
+        evq(1:npw_ik,ibnd) = aux2(dffts%nl(igk_k(1:npw_ik,ik)),ibnd)
       enddo
   
       ! compute overlaps <evc|evq>
       do ibnd = 1, occ
         do jbnd = 1, occ
-          overlap(ibnd,jbnd) = zdotc(npw, evc(1,ibnd), 1, evq(1,jbnd), 1)
+          overlap(ibnd,jbnd) = zdotc(npw_ik, evc(1,ibnd), 1, evq(1,jbnd), 1)
         enddo
       enddo
 
@@ -363,9 +368,9 @@ SUBROUTINE dudk_covariant_single_point(ik, occ, dudk)
       !
       do ibnd = 1, occ
         do jbnd = 1, occ
-          dudk(1:npw,ibnd,ipol) = dudk(1:npw,ibnd,ipol) + &
+          dudk(1:npw_ik,ibnd,ipol) = dudk(1:npw_ik,ibnd,ipol) + &
                         sig * 0.5d0/bmod * &
-                        overlap(jbnd,ibnd) * evq(1:npw,jbnd)
+                        overlap(jbnd,ibnd) * evq(1:npw_ik,jbnd)
         enddo
       enddo
 
@@ -373,12 +378,12 @@ SUBROUTINE dudk_covariant_single_point(ik, occ, dudk)
   enddo ! ipol
   deallocate(psir, aux, aux2, overlap)
   ! make dudk cartesian
-  allocate(tmp(npw,3))
+  allocate(tmp(npw_ik,3))
   do ibnd = 1, occ
-     tmp = dudk(1:npw,ibnd,1:3)
+     tmp = dudk(1:npw_ik,ibnd,1:3)
      do ipol = 1,3
         bmod = sqrt( sum(bg(1:3,ipol)**2.d0) ) !* tpiba
-        dudk(1:npw,ibnd,ipol) = ( at(ipol,1)*tmp(:,1) + at(ipol,2)*tmp(:,2)+ at(ipol,3)*tmp(:,3) ) /tpiba 
+        dudk(1:npw_ik,ibnd,ipol) = ( at(ipol,1)*tmp(:,1) + at(ipol,2)*tmp(:,2)+ at(ipol,3)*tmp(:,3) ) /tpiba 
      enddo
   enddo
   deallocate(tmp)

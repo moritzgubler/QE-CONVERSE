@@ -124,6 +124,12 @@ MODULE gipaw_module
 #ifdef __BANDS
   INTEGER :: ibnd_start, ibnd_end
 #endif
+
+!! These parameters are needed with the US pseudopotentials.
+ ! used to be in uspp_data module
+  INTEGER :: nqx, nqxq
+  REAL(dp), PARAMETER :: dq = 0.01d0
+
 !-----------------------------------------------------------------------
 END MODULE gipaw_module
 !-----------------------------------------------------------------------

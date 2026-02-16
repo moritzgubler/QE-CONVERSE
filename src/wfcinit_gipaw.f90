@@ -14,7 +14,8 @@ SUBROUTINE wfcinit_gipaw()
   ! ... It also open needed files or memory buffers
   !
   USE io_global,            ONLY : stdout, ionode, ionode_id
-  USE basis,                ONLY : natomwfc, starting_wfc
+  USE basis,                ONLY : natomwfc
+  USE starting_scf,         ONLY : starting_wfc
   USE bp,                   ONLY : lelfield
   USE klist,                ONLY : xk, nks, ngk, igk_k
   USE control_flags,        ONLY : io_level, lscf
@@ -34,7 +35,6 @@ SUBROUTINE wfcinit_gipaw()
   USE qexsd_module,         ONLY : qexsd_readschema
   USE qes_types_module,     ONLY : output_type
   USE qes_libs_module,      ONLY : qes_reset
-  USE wavefunctions_gpum,   ONLY : using_evc
   USE uspp_init,            ONLY : init_us_2
   USE control_flags,        ONLY : use_gpu
   !
@@ -47,7 +47,7 @@ SUBROUTINE wfcinit_gipaw()
   !
 !  print*, 'chiama wfcinit_gipaw'
   CALL start_clock( 'wfcinit' )
-  CALL using_evc(0) ! this may be removed
+!  CALL using_evc(0) ! this may be removed
   !
   ! ... Orthogonalized atomic functions needed for DFT+U and other cases
   !
@@ -74,9 +74,13 @@ SUBROUTINE wfcinit_gipaw()
      dirname = restart_dir ( )
      IF (ionode) CALL qexsd_readschema ( xmlfile(), ierr, output_obj )
      CALL mp_bcast(ierr, ionode_id, intra_image_comm)
-     IF ( ierr <= 0 ) THEN
+     IF ( ierr <= 0 .and.  (.not. ionode .or. &
+             output_obj%convergence_info%wf_collected_ispresent) ) THEN
         ! xml file is valid
-        IF (ionode) twfcollect_file = output_obj%band_structure%wf_collected
+        IF (ionode) twfcollect_file = output_obj%convergence_info%wf_collected
+!     IF ( ierr <= 0 ) THEN
+        ! xml file is valid
+!        IF (ionode) twfcollect_file = output_obj%band_structure%wf_collected
         CALL mp_bcast(twfcollect_file, ionode_id, intra_image_comm)
         CALL qes_reset  ( output_obj )
      ELSE
@@ -119,7 +123,7 @@ SUBROUTINE wfcinit_gipaw()
         IF ( nks == 1 ) THEN
            INQUIRE (unit = iunwfc, opened = opnd_file)
            IF ( .NOT.opnd_file ) CALL diropn( iunwfc, 'wfc', 2*nwordwfc, exst )
-           CALL using_evc(2)
+!           CALL using_evc(2)
            CALL davcio ( evc, 2*nwordwfc, iunwfc, nks, -1 )
            IF ( .NOT.opnd_file ) CLOSE ( UNIT=iunwfc, STATUS='keep' )
         END IF
@@ -197,7 +201,7 @@ SUBROUTINE wfcinit_gipaw()
      !
      ! ... write  starting wavefunctions to file
      !
-     IF ( nks > 1 .OR. (io_level > 1) .OR. lelfield ) CALL using_evc(0)
+!     IF ( nks > 1 .OR. (io_level > 1) .OR. lelfield ) CALL using_evc(0)
      IF ( nks > 1 .OR. (io_level > 1) .OR. lelfield ) &
          CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
      !
@@ -219,7 +223,8 @@ SUBROUTINE init_wfc_gipaw ( ik )
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
                                    bec_type, becp
   USE constants,            ONLY : tpi
-  USE basis,                ONLY : natomwfc, starting_wfc
+  USE basis,                ONLY : natomwfc
+  USE starting_scf,         ONLY : starting_wfc
   USE gvect,                ONLY : g, gstart
   USE klist,                ONLY : xk, ngk, igk_k
   USE wvfct,                ONLY : nbnd, npwx, et
@@ -239,9 +244,9 @@ SUBROUTINE init_wfc_gipaw ( ik )
   USE mp,                   ONLY : mp_bcast
   USE xc_lib,               ONLY : xclib_dft_is, stop_exx
   !
-  USE wavefunctions_gpum,   ONLY : using_evc, using_evc_d, evc_d
-  USE wvfct_gpum,           ONLY : using_et, using_et_d, et_d
-  USE becmod_subs_gpum,     ONLY : using_becp_auto, using_becp_d_auto
+!  USE wavefunctions_gpum,   ONLY : using_evc, using_evc_d, evc_d
+!  USE wvfct_gpum,           ONLY : using_et, using_et_d, et_d
+!  USE becmod_subs_gpum,     ONLY : using_becp_auto, using_becp_d_auto
   USE control_flags,        ONLY : lscf, use_gpu
   !
   IMPLICIT NONE
@@ -296,7 +301,7 @@ SUBROUTINE init_wfc_gipaw ( ik )
      CALL start_clock( 'wfcinit:atomic' ); !write(*,*) 'start wfcinit:atomic' ; FLUSH(6)
      IF(use_gpu) THEN
        !$acc host_data use_device(wfcatom)
-       CALL atomic_wfc_gpu( ik, wfcatom )
+!       CALL atomic_wfc_gpu( ik, wfcatom )
        !$acc end host_data
      ELSE
        CALL atomic_wfc( ik, wfcatom )
@@ -409,14 +414,14 @@ SUBROUTINE init_wfc_gipaw ( ik )
   ! ... Allocate space for <beta|psi>
   !
 !civn: becp_d to be removed as soon as calbec is fixed
-  IF(use_gpu) THEN
-    CALL using_becp_auto (2)
+!  IF(use_gpu) THEN
+!    CALL using_becp_auto (2)
+!    CALL allocate_bec_type ( nkb, n_starting_wfc, becp, intra_bgrp_comm )
+!    CALL using_becp_d_auto (2)
+!  ELSE
     CALL allocate_bec_type ( nkb, n_starting_wfc, becp, intra_bgrp_comm )
-    CALL using_becp_d_auto (2)
-  ELSE
-    CALL allocate_bec_type ( nkb, n_starting_wfc, becp, intra_bgrp_comm )
-    CALL using_becp_auto (2)
-  END IF 
+    !    CALL using_becp_auto (2)
+!  END IF 
   !
   ! ... the following trick is for electric fields with Berry's phase:
   ! ... by setting lelfield = .false. one prevents the calculation of
@@ -431,14 +436,14 @@ SUBROUTINE init_wfc_gipaw ( ik )
   IF ( xclib_dft_is('hybrid') .and. lscf  ) CALL stop_exx()
   CALL start_clock( 'wfcinit:wfcrot' ); !write(*,*) 'start wfcinit:wfcrot' ; FLUSH(6)
   IF(use_gpu) THEN
-    CALL using_evc_d(2)  ! rotate_wfc_gpu (..., evc_d, etatom_d) -> evc : out (not specified)
+!    CALL using_evc_d(2)  ! rotate_wfc_gpu (..., evc_d, etatom_d) -> evc : out (not specified)
     !$acc host_data use_device(wfcatom,etatom)
-    CALL rotate_wfc_gpu ( npwx, ngk_ik, n_starting_wfc, gstart, nbnd, wfcatom, npol, okvan, evc_d, etatom )
+    CALL rotate_wfc_gpu ( npwx, ngk_ik, n_starting_wfc, gstart, nbnd, wfcatom, npol, okvan, evc, etatom )
     !$acc end host_data
   ELSE
 !          print*, 'ENTRA QUI'
     CALL rotate_wfc_gipaw ( npwx, ngk(ik), n_starting_wfc, gstart, nbnd, wfcatom, npol, okvan, evc, etatom )
-    CALL using_evc(1)  ! rotate_wfc (..., evc, etatom) -> evc : out (not specified)
+    !CALL using_evc(1)  ! rotate_wfc (..., evc, etatom) -> evc : out (not specified)
   END IF
   CALL stop_clock( 'wfcinit:wfcrot' ); !write(*,*) 'stop wfcinit:wfcrot' ; FLUSH(6)
   !
@@ -447,26 +452,26 @@ SUBROUTINE init_wfc_gipaw ( ik )
   ! ... copy the first nbnd eigenvalues
   ! ... eigenvectors are already copied inside routine rotate_wfc
   !
-  if(use_gpu) then 
-    CALL using_et_d(2)
+!  if(use_gpu) then 
+!    CALL using_et_d(2)
     !$acc kernels  
-    DO ibnd=1,nbnd
-       et_d(ibnd,ik) = etatom(ibnd)
-    END DO
+!    DO ibnd=1,nbnd
+!       et_d(ibnd,ik) = etatom(ibnd)
+!    END DO
     !$acc end kernels
-  else
-    CALL using_et(1)
+!  else
+!    CALL using_et(1)
     et(1:nbnd,ik) = etatom(1:nbnd)
-  end if 
+!  end if 
   !
-  if(use_gpu) then 
-    CALL using_becp_auto (2)
+!  if(use_gpu) then 
+!    CALL using_becp_auto (2)
+!    CALL deallocate_bec_type ( becp )
+!    CALL using_becp_d_auto (2)
+!  else
     CALL deallocate_bec_type ( becp )
-    CALL using_becp_d_auto (2)
-  else
-    CALL deallocate_bec_type ( becp )
-    CALL using_becp_auto (2)
-  end if
+!    CALL using_becp_auto (2)
+!  end if
   !
   DEALLOCATE( etatom )
   DEALLOCATE( wfcatom )
