@@ -112,7 +112,13 @@ Description: verbosity level (allowed values: \texttt{'low'}, \texttt{'medium'},
 Description: the small wave-vector for the covariant finite difference formula.
 
 \item[dudk\_method] (type: string, default: \texttt{'covariant'})\\
-Description: k-point derivative method (only allowed values: \texttt{'covariant'} )
+Description: k-point derivative method. Allowed values:
+\begin{itemize}
+  \item \texttt{'covariant'}: 2nd-order central difference using off-mesh k$\pm$q points computed on the fly (step size controlled by \texttt{q\_gipaw}).
+  \item \texttt{'singlepoint'}: covariant derivative via real-space multiplication by $e^{i\mathbf{G}\cdot\mathbf{r}}$ using one reciprocal-lattice-vector step.
+  \item \texttt{'6th\_order'}: 6th-order central difference using existing k-mesh neighbours. Requires a regular Monkhorst--Pack mesh and \texttt{npool=1}. Uses stencil coefficients $[3/4,\,-3/20,\,1/60]$ at displacements $[\pm 1,\,\pm 2,\,\pm 3]\,\Delta k$, with parallel transport chained through consecutive overlap matrices. Recommended when the k-mesh spacing is large relative to \texttt{q\_gipaw} (e.g.\ $\Delta k \gtrsim 0.05$~\AA$^{-1}$).
+  \item \texttt{'read'}: read a previously computed du/dk from disk.
+\end{itemize}
 
 \item[diag\_thr\_init] (type: real, default: 10$^{-7}$, units: Ry$^2$)\\
 Description: Convergence threshold (ethr) for iterative diagonalization.

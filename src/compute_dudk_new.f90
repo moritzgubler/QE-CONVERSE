@@ -130,6 +130,21 @@ end if
     enddo
     enddo
 
+  elseif (trim(dudk_method) == '6th_order') then
+    write(stdout,'(''(6th-order finite difference on k-mesh)'')')
+    do ik = 1, nks
+    call find_nbnd_occ(ik, occ, emin, emax)
+    write(stdout,'(5X,''k-point:'',I4,4X,''occ='',I3)') ik, occ
+    call dudk_6th_order_mesh(ik, occ, dudk)
+    do ipol = 1, 3
+        if (dudk_in_memory) then
+            call store_dudk(dudk(:,:,ipol), ik, ipol, npw, nbnd)
+        else
+            call davcio( dudk(1,1,ipol), 2*nwordwfc, iundudk1 + ipol - 1, ik, +1 )
+        endif
+    enddo
+    enddo
+
     
 !  elseif (trim(dudk_method) == 'kdotp') then
 !    write(stdout,'(''(k \dot p perturbation)'')') 
@@ -483,6 +498,211 @@ SUBROUTINE dudk_covariant_single_point_old(ik, occ, dudk)
 
 END SUBROUTINE dudk_covariant_single_point_old
 
+
+
+!-----------------------------------------------------------------------
+! 6th-order covariant finite difference on the k-mesh
+!
+! Uses the stencil:
+!   du/dk = (1/h) * sum_{n=1}^{3} c(n) * sum_{sig=+-1} sig * S^{-1}(k, k+sig*n*h) |u(k+sig*n*h)>
+!
+! with 6th-order coefficients c = [3/4, -3/20, 1/60] at displacements n = [1, 2, 3].
+! S^{-1}(k, k+n*h) is the chained parallel-transport matrix built by multiplying
+! single-step inverse overlaps: S^{-1}(k+(n-1)*h, k+n*h) @ ... @ S^{-1}(k, k+h).
+!
+! Requires a regular Monkhorst-Pack k-mesh and npool=1 (all k-points in one pool).
+!-----------------------------------------------------------------------
+SUBROUTINE dudk_6th_order_mesh(ik, occ, dudk)
+  USE kinds,         ONLY : dp
+  USE cell_base,     ONLY : tpiba
+  USE wvfct,         ONLY : npw, nbnd, npwx
+  USE wavefunctions, ONLY : evc
+  USE io_files,      ONLY : nwordwfc, iunwfc
+  USE buffers,       ONLY : get_buffer
+  USE klist,         ONLY : nks, xk
+  USE mp_bands,      ONLY : intra_bgrp_comm
+  USE mp,            ONLY : mp_sum
+  USE mp_global,     ONLY : npool
+  IMPLICIT NONE
+
+  complex(dp), external :: zdotc
+  integer,     intent(in)  :: ik, occ
+  complex(dp), intent(out) :: dudk(npwx, nbnd, 3)
+
+  ! 6th-order central difference coefficients at displacements n = 1, 2, 3
+  ! f'(x) = (1/h)*[(-1/60)f(x-3h) + (3/20)f(x-2h) - (3/4)f(x-h)
+  !               + (3/4)f(x+h)  - (3/20)f(x+2h) + (1/60)f(x+3h)]
+  real(dp), parameter :: coeff(3) = (/ 3.d0/4.d0, -3.d0/20.d0, 1.d0/60.d0 /)
+
+  complex(dp), allocatable :: u_k(:,:)     ! wfc at reference k
+  complex(dp), allocatable :: u_prev(:,:)  ! wfc at k + (n-1)*step (for chaining)
+  complex(dp), allocatable :: u_n(:,:)     ! wfc at k + n*step
+  complex(dp), allocatable :: S_step(:,:)  ! single-step overlap (inverted in place)
+  complex(dp), allocatable :: S_chain(:,:) ! accumulated parallel-transport matrix
+  complex(dp), allocatable :: S_tmp(:,:)   ! temporary for matrix product
+
+  integer  :: ipol, sig, n, ibnd, jbnd, ik_n
+  real(dp) :: dk_step, norm_fac
+
+  if (occ == 0) return
+
+  if (npool > 1) &
+    call errore('dudk_6th_order_mesh', &
+                'pool parallelization not supported; rerun with npool=1', 1)
+
+  allocate(u_k(npwx, occ), u_prev(npwx, occ), u_n(npwx, occ))
+  allocate(S_step(occ, occ), S_chain(occ, occ), S_tmp(occ, occ))
+
+  ! Save the reference wavefunction u(k)
+  call get_buffer(evc, nwordwfc, iunwfc, ik)
+  u_k(1:npw, 1:occ) = evc(1:npw, 1:occ)
+
+  dudk(:,:,:) = (0.d0, 0.d0)
+
+  do ipol = 1, 3
+
+    ! Determine the mesh step in direction ipol (crystal coordinates, dimensionless).
+    ! norm_fac = h in physical units, same convention as dudk_covariant.
+    call find_mesh_step(ik, ipol, nks, xk, dk_step)
+    norm_fac = dk_step * tpiba
+
+    do sig = -1, 1, 2
+
+      ! Initialise S_chain as the identity matrix
+      S_chain = (0.d0, 0.d0)
+      do ibnd = 1, occ
+        S_chain(ibnd, ibnd) = (1.d0, 0.d0)
+      enddo
+
+      ! u_prev starts as u(k); updated to u(k + (n-1)*step) as n advances
+      u_prev(1:npw, 1:occ) = u_k(1:npw, 1:occ)
+
+      do n = 1, 3
+
+        ! Find k-point index at displacement sig*n in direction ipol
+        call find_kneighbor(ik, ipol, sig*n, dk_step, nks, xk, ik_n)
+        if (ik_n < 0) &
+          call errore('dudk_6th_order_mesh', &
+                      'k-mesh neighbor not found; check that the mesh is regular and npool=1', 1)
+
+        ! Read u(k + sig*n*step)
+        call get_buffer(evc, nwordwfc, iunwfc, ik_n)
+        u_n(1:npw, 1:occ) = evc(1:npw, 1:occ)
+
+        ! Single-step overlap: S_step(ibnd, jbnd) = <u_prev(:,ibnd) | u_n(:,jbnd)>
+        do ibnd = 1, occ
+          do jbnd = 1, occ
+            S_step(ibnd, jbnd) = zdotc(npw, u_prev(1,ibnd), 1, u_n(1,jbnd), 1)
+          enddo
+        enddo
+#ifdef __MPI
+        call mp_sum(S_step, intra_bgrp_comm)
+#endif
+        ! Invert S_step in place → S^{-1}(k+(n-1)*step, k+n*step)
+        call invert_matrix(occ, S_step)
+
+        ! Extend chain: S_chain(k → k+n*step) = S_step^{-1} @ S_chain(k → k+(n-1)*step)
+        S_tmp   = matmul(S_step, S_chain)
+        S_chain = S_tmp
+
+        ! Accumulate: sig * coeff(n) / norm_fac * sum_j S_chain(j,i) * u_n(:,j)
+        do ibnd = 1, occ
+          do jbnd = 1, occ
+            dudk(1:npw, ibnd, ipol) = dudk(1:npw, ibnd, ipol) + &
+                  sig * coeff(n) / norm_fac * S_chain(jbnd, ibnd) * u_n(1:npw, jbnd)
+          enddo
+        enddo
+
+        ! Advance for the next step in the chain
+        u_prev(1:npw, 1:occ) = u_n(1:npw, 1:occ)
+
+      enddo  ! n
+    enddo  ! sig
+  enddo  ! ipol
+
+  ! Restore evc to the reference k-point
+  call get_buffer(evc, nwordwfc, iunwfc, ik)
+
+  deallocate(u_k, u_prev, u_n, S_step, S_chain, S_tmp)
+
+END SUBROUTINE dudk_6th_order_mesh
+
+
+!-----------------------------------------------------------------------
+! Determine the positive mesh step in crystal-coordinate direction ipol.
+! Searches for k-points that differ from xk(:,ik) only in the ipol component
+! and returns the smallest positive (wrapped) difference.
+!-----------------------------------------------------------------------
+SUBROUTINE find_mesh_step(ik, ipol, nks, xk, dk_step)
+  USE kinds, ONLY : dp
+  IMPLICIT NONE
+  integer,  intent(in)  :: ik, ipol, nks
+  real(dp), intent(in)  :: xk(3, nks)
+  real(dp), intent(out) :: dk_step
+
+  real(dp), parameter :: tol = 1.d-6
+  real(dp) :: diff
+  integer  :: jk, jpol
+  logical  :: match
+
+  dk_step = 1.d10
+
+  do jk = 1, nks
+    if (jk == ik) cycle
+    ! Require non-ipol components to match ik
+    match = .true.
+    do jpol = 1, 3
+      if (jpol == ipol) cycle
+      if (abs(xk(jpol, jk) - xk(jpol, ik)) > tol) then
+        match = .false.
+        exit
+      endif
+    enddo
+    if (.not. match) cycle
+    ! Wrapped positive difference in the ipol direction
+    diff = xk(ipol, jk) - xk(ipol, ik)
+    diff = diff - nint(diff)
+    if (diff > tol .and. diff < dk_step) dk_step = diff
+  enddo
+
+  if (dk_step > 1.d9) &
+    call errore('find_mesh_step', &
+                'cannot determine k-mesh step; is this a regular Monkhorst-Pack mesh?', 1)
+
+END SUBROUTINE find_mesh_step
+
+
+!-----------------------------------------------------------------------
+! Find the index of the k-point at xk(:,ik) shifted by n_disp*dk_step
+! in crystal-coordinate direction ipol.  Returns -1 if not found.
+!-----------------------------------------------------------------------
+SUBROUTINE find_kneighbor(ik, ipol, n_disp, dk_step, nks, xk, ik_neighbor)
+  USE kinds, ONLY : dp
+  IMPLICIT NONE
+  integer,  intent(in)  :: ik, ipol, n_disp, nks
+  real(dp), intent(in)  :: dk_step, xk(3, nks)
+  integer,  intent(out) :: ik_neighbor
+
+  real(dp), parameter :: tol = 1.d-6
+  real(dp) :: target_k(3), diff(3)
+  integer  :: jk, c
+
+  target_k(1:3) = xk(1:3, ik)
+  target_k(ipol) = target_k(ipol) + n_disp * dk_step
+
+  ik_neighbor = -1
+  do jk = 1, nks
+    do c = 1, 3
+      diff(c) = xk(c, jk) - target_k(c)
+      diff(c) = diff(c) - nint(diff(c))   ! wrap to [-0.5, 0.5)
+    enddo
+    if (all(abs(diff) < tol)) then
+      ik_neighbor = jk
+      return
+    endif
+  enddo
+
+END SUBROUTINE find_kneighbor
 
 
 !-----------------------------------------------------------------------
