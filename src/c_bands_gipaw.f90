@@ -137,8 +137,7 @@ SUBROUTINE c_bands_gipaw ( iter )
      ! ... and for rho calculation
      !
      CALL using_evc(0)
-     IF ( nks > 1 .OR. lelfield ) &
-          CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
+     CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
      !
      ! ... beware: with pools, if the number of k-points on different
      ! ... pools differs, make sure that all processors are still in

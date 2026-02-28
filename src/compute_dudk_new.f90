@@ -41,6 +41,7 @@ USE orbital_magnetization, ONLY : &
   logical :: exst
   integer :: ik, ipol, occ
   integer, parameter :: iundudk1 = 75, iundudk2 = 76, iundudk3 = 77
+  character(len=100) :: fname
   
   call start_clock ('compute_dudk')
 
@@ -70,15 +71,21 @@ end if
 if (.not. dudk_in_memory) then
   ! NMR mode
   if (any(m_0 /= 0.0_dp)) then
-      call diropn(iundudk1, nmr_dudk_name_x(), 2*nwordwfc, exst)
-      call diropn(iundudk2, nmr_dudk_name_y(), 2*nwordwfc, exst)
-      call diropn(iundudk3, nmr_dudk_name_z(), 2*nwordwfc, exst)
+      write(fname,'(A,".",I0)') trim(nmr_dudk_name_x()), my_pool_id
+      call diropn(iundudk1, trim(fname), 2*nwordwfc, exst)
+      write(fname,'(A,".",I0)') trim(nmr_dudk_name_y()), my_pool_id
+      call diropn(iundudk2, trim(fname), 2*nwordwfc, exst)
+      write(fname,'(A,".",I0)') trim(nmr_dudk_name_z()), my_pool_id
+      call diropn(iundudk3, trim(fname), 2*nwordwfc, exst)
 
   ! g-tensor mode
   else if (any(lambda_so /= 0.0_dp)) then
-      call diropn(iundudk1, om_dudk_name_x(), 2*nwordwfc, exst)
-      call diropn(iundudk2, om_dudk_name_y(), 2*nwordwfc, exst)
-      call diropn(iundudk3, om_dudk_name_z(), 2*nwordwfc, exst)
+      write(fname,'(A,".",I0)') trim(om_dudk_name_x()), my_pool_id
+      call diropn(iundudk1, trim(fname), 2*nwordwfc, exst)
+      write(fname,'(A,".",I0)') trim(om_dudk_name_y()), my_pool_id
+      call diropn(iundudk2, trim(fname), 2*nwordwfc, exst)
+      write(fname,'(A,".",I0)') trim(om_dudk_name_z()), my_pool_id
+      call diropn(iundudk3, trim(fname), 2*nwordwfc, exst)
 
   ! No mode selected → fatal error
   else

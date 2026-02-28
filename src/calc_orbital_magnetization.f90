@@ -80,7 +80,7 @@
   allocate (dudk_bra(npwx,nbnd), dudk_ket(npwx,nbnd), hpsi(npwx))
   
   call start_clock ('orbital_magnetization')
-  
+
   write(stdout,*)
   write(stdout,'(5X,''Computing the orbital magnetization (bohr mag/cell):'')')
   berry_curvature = 0.d0
@@ -190,19 +190,21 @@
 !            ik, my_pool_id+1, xk(:,ik), kp_berry, kp_M_LC*rydtohar, kp_M_IC*rydtohar
     endif
   enddo !ik
-  
+
 #ifdef __MPI
- ! no reduction for delta_M_bare and delta_M_para and delta_M_dia
   call mp_sum(orb_magn_LC, intra_bgrp_comm )
   call mp_sum(orb_magn_IC, intra_bgrp_comm )
   call mp_sum(berry_curvature, intra_bgrp_comm )
   call mp_sum(orb_magn_LC, inter_bgrp_comm )
   call mp_sum(orb_magn_IC, inter_bgrp_comm )
   call mp_sum(berry_curvature, inter_bgrp_comm )
+  call mp_sum(orb_magn_LC, inter_pool_comm )
+  call mp_sum(orb_magn_IC, inter_pool_comm )
+  call mp_sum(berry_curvature, inter_pool_comm )
+  call mp_sum(delta_M_bare, inter_pool_comm )
+  call mp_sum(delta_M_para, inter_pool_comm )
+  call mp_sum(delta_M_dia, inter_pool_comm )
 #endif
-  
-  ! no reduction for delta_M_bare and delta_M_para and delta_M_dia 
-
 
   ! close files (only if not using in-memory storage)
   if (.not. dudk_in_memory) then
@@ -360,8 +362,6 @@
         endif
       enddo
     enddo
-    !PRINT*, mpime, kk, -2.d0*tmp
-    ! check the sign and real or imag!!
     delta_M_bare(kk) = delta_M_bare(kk) - 2.d0*imag(tmp)
     END SUBROUTINE calc_delta_M_bare
 
@@ -592,9 +592,10 @@
     delta_rmc_gipaw = delta_rmc_gipaw + s_weight * tmp
 
   enddo
-! no reduction for delta_rmc_gipaw
 #if defined(__MPI)
   CALL mp_sum( delta_rmc, intra_bgrp_comm )
+  CALL mp_sum( delta_rmc, inter_pool_comm )
+  CALL mp_sum( delta_rmc_gipaw, inter_pool_comm )
 #endif
 
 
