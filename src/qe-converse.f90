@@ -237,6 +237,15 @@ SUBROUTINE print_clock_gipaw
   write(stdout,*)
   call print_clock ('compute_dudk')
   call print_clock ('orbital_magnetization')
+  call print_clock ('om_alloc')
+  call print_clock ('om_setdvrs')
+  call print_clock ('om_setup')
+  call print_clock ('om_dbecp')
+  call print_clock ('om_dudk_io')
+  call print_clock ('om_bands')
+  call print_clock ('om_gipaw')
+  call print_clock ('om_ik_post')
+  call print_clock ('om_pool_sum')
 
 END SUBROUTINE print_clock_gipaw
 
