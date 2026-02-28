@@ -157,6 +157,7 @@ end if
 
    write(stdout,'(5X,''done with du/dk'',3X,''q_gipaw = '',F8.6)') q_gipaw
    deallocate(dudk)
+   if (allocated(evq)) deallocate(evq)
 
   call stop_clock ('compute_dudk')
 END SUBROUTINE compute_dudk_new
