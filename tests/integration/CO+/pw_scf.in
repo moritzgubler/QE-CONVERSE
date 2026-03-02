@@ -1,7 +1,7 @@
 &control
     prefix = 'CO+'
     calculation = 'scf'
-    pseudo_dir = './pseudo/'
+    pseudo_dir = '../test_pseudos/'
     outdir = './scratch/'
     tstress = .false.
     tprnfor = .false.
@@ -25,7 +25,7 @@
     conv_thr = 1e-8
 /
 ATOMIC_SPECIES
-O    16.0000   O.pbe-tm-new-gipaw-dc.UPF
+O    16.0000   O.pbe-tm-new-gipaw.UPF
 C    12.0000   C.pbe-tm-new-gipaw.UPF
 
 ATOMIC_POSITIONS angstrom

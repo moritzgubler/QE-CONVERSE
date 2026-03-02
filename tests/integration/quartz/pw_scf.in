@@ -2,7 +2,7 @@
     calculation = 'scf'
     prefix = 'quartz'
     restart_mode = 'from_scratch'
-    pseudo_dir = './pseudo/'
+    pseudo_dir = '../test_pseudos/'
     outdir = './scratch/'
     verbosity = 'high'
 /

@@ -1,6 +1,9 @@
 #!/bin/bash
 
-$PW -in pw_scf.in > scratch/scf.out 2>&1
+# clean directory
+rm -rf *.out scratch
+
+$PW -in pw_scf.in > scf.out 2>&1
 
 $QECONVERSE < gtensor_1.in > gtensor_1.out
 $QECONVERSE < gtensor_2.in > gtensor_2.out
