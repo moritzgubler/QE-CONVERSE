@@ -74,7 +74,6 @@ make_lr_modules:
 
 qe-converse.x: $(CONVERSE_OBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ $(CONVERSE_OBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
-	(cd ../bin; ln -sf ../src/qe-converse.x .)
 
 clean:
 	-/bin/rm -f qe-converse.x *.o *.F90 *__genmod.f90 *.d *.mod *.i *.L

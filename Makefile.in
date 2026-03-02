@@ -7,6 +7,8 @@ all:    build
 build:
 	@echo "Building qe-converse..."
 	$(MAKE) -C src
+	@mkdir -p bin
+	@cd bin && ln -sf ../src/qe-converse.x .
 
 test:
 	$(MAKE) -C tests QE_SRC_DIR=$(QE_SOURCE)
