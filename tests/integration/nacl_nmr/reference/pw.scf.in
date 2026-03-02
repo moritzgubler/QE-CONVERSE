@@ -9,7 +9,7 @@
   ibrav = 0
   nat = 2
   ntyp = 2
-  ecutwfc = 70
+  ecutwfc = 50
   nosym = .true.
   noinv = .true.
   occupations = 'smearing'

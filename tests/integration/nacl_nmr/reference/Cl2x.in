@@ -4,6 +4,7 @@
         diagonalization = 'david'
         q_gipaw = 0.01
         dudk_method = 'covariant'
+        dudk_in_memory = .true.
         mixing_beta = 0.5
         m_0(1) = 1.0
         m_0_atom = 2
