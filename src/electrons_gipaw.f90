@@ -1178,7 +1178,9 @@ SUBROUTINE electrons_scf_gipaw ( printout, exxen )
   ! ... exiting: write (unless disabled) the charge density to file
   ! ... (also write ldaU ns coefficients and PAW becsum)
   !
-  IF ( io_level > -1 ) CALL write_scf( rho, nspin )
+  ! write_scf suppressed: density is never read back in qe-converse and
+  ! causes race conditions when parallel runs share the same scratch dir.
+  ! IF ( io_level > -1 ) CALL write_scf( rho, nspin )
   !
   ! ... delete mixing info if converged, keep it if not
   !
