@@ -9,7 +9,6 @@
 config.log
 config.status
 *.status
-Makefile.in
 configure~
 
 # Auto-generated Makefiles (from ./configure; see configure.ac AC_OUTPUT)
