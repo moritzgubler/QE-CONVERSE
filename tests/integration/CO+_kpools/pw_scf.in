@@ -1,7 +1,7 @@
 &control
     prefix = 'CO+'
     calculation = 'scf'
-    pseudo_dir = '../../pseudo/'
+    pseudo_dir = '../test_pseudos/'
     outdir = './scratch/'
     tstress = .false.
     tprnfor = .false.
@@ -32,4 +32,4 @@ ATOMIC_POSITIONS angstrom
 O             0.0000000000        0.0000000000       -0.0008530823
 C             0.0000000000        0.0000000000        1.1288530823
 K_POINTS automatic
-1 1 1 0 0 0
+2 2 2 0 0 0
