@@ -6,7 +6,6 @@ rm -rf *.out scratch
 mpirun -np 4 $PW -in pw_scf.in > scf.out 2>&1
 
 mpirun -np 4 $QECONVERSE < Si1x.in > Si1x.out
-mpirun -np 4 $QECONVERSE < Si1y.in > Si1y.out
-mpirun -np 4 $QECONVERSE < Si1z.in > Si1z.out
+mpirun -np 4 $QECONVERSE < O4z.in > O4z.out
 
-python3 ../check_nmr.py --files Si1x.out Si1y.out Si1z.out --refdir reference
+python3 ../check_nmr.py --files Si1x.out O4z.out --refdir reference

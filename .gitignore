@@ -25,6 +25,7 @@ __pycache__/
 
 # Integration test runtime directories and generated output files
 tests/integration/*/scratch/
+tests/integration/*/*/scratch/
 tests/integration/*/*.out
 
 # Unit test compiled binary
