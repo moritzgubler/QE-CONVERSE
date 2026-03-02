@@ -1,10 +1,31 @@
+# Compiled Fortran objects and modules
 *.o
 *.mod
+
+# Executables
 *.x
-*.status
+
+# Autoconf/automake generated files
 config.log
-makedeps.sh
 config.status
+*.status
+Makefile.in
+configure~
+
+# Auto-generated Makefiles (from ./configure; see configure.ac AC_OUTPUT)
+/Makefile
+/src/Makefile
+
+# Generated dependency / helper scripts
 makedeps.sh
 make.depend
-src/Makefile
+
+# Python caches
+__pycache__/
+
+# Integration test runtime directories and generated output files
+tests/integration/*/scratch/
+tests/integration/*/*.out
+
+# Unit test compiled binary
+tests/unit/test_runner

@@ -207,6 +207,97 @@ disk file, which zeros out `delta_M_bare`.
 
 ---
 
+## Testing
+
+### Directory layout
+
+```
+tests/
+  Makefile                      top-level test runner (unit + integration)
+  integration/
+    pyproject.toml              pytest configuration
+    conftest.py                 shared fixtures (binary path, scratch setup, runner)
+    parse_output.py             regex parser for QE-CONVERSE stdout
+    test_epr_cf.py              CF g-tensor integration tests
+    reference/
+      cf_gtensor_{1,2,3}.json  reference values from benchmarking/CF/
+  unit/
+    Makefile                    downloads test-drive, builds and runs unit tests
+    test_util.f90               test-drive test module (trace, principal_axis)
+    test_runner.f90             test-drive runner program
+    testdrive.F90               auto-downloaded from fortran-lang/test-drive
+```
+
+### Integration tests (pytest)
+
+**Framework:** pytest + numpy
+**What is tested:** the full binary end-to-end against stored reference values.
+
+Prerequisites:
+1. `make` in the repo root (binary at `bin/qe-converse.x`).
+2. A completed pw.x SCF for the CF molecule:
+   ```bash
+   cd benchmarking/CF
+   mpirun -np 6 pw.x -in CF_scf.in > CF_scf.out
+   ```
+   This produces `benchmarking/CF/scratch/CF.save/`.
+
+Run serial:
+```bash
+make -C tests integration
+# or directly:
+cd tests/integration && pytest -v
+```
+
+Run parallel (e.g. npool=2, 2 MPI ranks):
+```bash
+make -C tests integration-parallel NP=2 NPOOL=2
+```
+
+Pass custom paths:
+```bash
+pytest --bin=/path/to/qe-converse.x --cf-save=/path/to/scratch
+```
+
+The `conftest.py` skips all tests gracefully if the binary or SCF save
+directory is not found — no hard failures in CI when the data is unavailable.
+
+**Key design decisions:**
+- The scratch directory is populated with **symlinks** to the original SCF files (not copies). Wavefunction files are large; `io_level=0` in newscf means they are never written back to disk during the test, so the originals are safe.
+- Tolerances: `atol=1.0 ppm` for g-tensor vectors, `atol=0.05 ppm` for scalars. Generous enough to survive compiler/library differences, tight enough to catch wrong physics.
+
+### Unit tests (test-drive)
+
+**Framework:** [test-drive](https://github.com/fortran-lang/test-drive) (single-file Fortran)
+**What is tested:** pure utility routines in `src/util.f90` that do not require
+a full QE initialisation at runtime.
+
+Current test coverage: `trace`, `principal_axis`, `principal_axis_simpson`.
+
+Build and run:
+```bash
+make -C tests/unit        # downloads testdrive.F90, compiles, links
+make -C tests/unit run    # also executes
+```
+
+Note: the unit test binary **does** link against all QE libraries (required
+because `util.f90` references QE modules at link time). It does NOT require
+MPI and can be run as a plain serial executable.
+
+### Adding new tests
+
+**New integration test case (e.g. NMR quartz):**
+1. Run pw.x + qe-converse.x for the system; save the scratch directory.
+2. Add reference values as `tests/integration/reference/<name>.json`.
+3. Add a fixture in `conftest.py` for the new scratch directory.
+4. Write `tests/integration/test_nmr_<name>.py` following the CF template.
+
+**New unit test:**
+1. Add a `subroutine test_<name>(error)` to `tests/unit/test_util.f90`.
+2. Register it in `collect_util_tests`.
+
+---
+
 ## Input Namelist
 
 The single input namelist is `&input_qeconverse`. Key parameters:
