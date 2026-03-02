@@ -182,19 +182,70 @@ def parse_nmr_shift(text):
 
 
 # ---------------------------------------------------------------------------
+# Orbital magnetization block (shared by NMR and g-tensor outputs)
+# ---------------------------------------------------------------------------
+
+def parse_orbital_magnetization(text):
+    """
+    Parse the orbital-magnetization block printed before the final result.
+
+    The block appears twice: once without and once with the Berry-curvature
+    correction.  Keys with the suffix _no_bc correspond to the first
+    (without-BC) block; keys without the suffix to the second (with-BC) block.
+
+    Returns a dict with:
+        m_lc_no_bc   - [x,y,z] M_LC  (without Berry curvature)
+        m_ic_no_bc   - [x,y,z] M_IC  (without Berry curvature)
+        delta_m_bare - [x,y,z] Delta_M_bare
+        delta_m_para - [x,y,z] Delta_M_para
+        delta_m_dia  - [x,y,z] Delta_M_dia
+        m_tot_no_bc  - [x,y,z] M_tot (without Berry curvature)
+        berry_curv   - [x,y,z] Berry curvature vector
+        m_lc         - [x,y,z] M_LC  (with Berry curvature)
+        m_ic         - [x,y,z] M_IC  (with Berry curvature)
+        delta_m      - [x,y,z] Delta_M (combined, with Berry curvature)
+        m_tot        - [x,y,z] M_tot (with Berry curvature)
+    """
+    result = {}
+    # "without BC" block -- first occurrences
+    result['m_lc_no_bc']   = _first_vec3(r'M_LC\s+=\s+(.*)', text)
+    result['m_ic_no_bc']   = _first_vec3(r'M_IC\s+=\s+(.*)', text)
+    # These three only appear in the without-BC block
+    result['delta_m_bare'] = _first_vec3(r'Delta_M_bare\s+=\s+(.*)', text)
+    result['delta_m_para'] = _first_vec3(r'Delta_M_para\s+=\s+(.*)', text)
+    result['delta_m_dia']  = _first_vec3(r'Delta_M_dia\s+=\s+(.*)', text)
+    result['m_tot_no_bc']  = _first_vec3(r'M_tot\s+=\s+(.*)', text)
+
+    result['berry_curv']   = _first_vec3(r'Berry curvature\s+=\s+(.*)', text)
+
+    # "with BC" block -- last occurrences
+    result['m_lc']    = _last_vec3(r'M_LC\s+=\s+(.*)', text)
+    result['m_ic']    = _last_vec3(r'M_IC\s+=\s+(.*)', text)
+    # Delta_M (no suffix) only appears in the with-BC block
+    result['delta_m'] = _first_vec3(r'Delta_M\s+=\s+(.*)', text)
+    result['m_tot']   = _last_vec3(r'M_tot\s+=\s+(.*)', text)
+
+    return result
+
+
+# ---------------------------------------------------------------------------
 # Generic run metadata
 # ---------------------------------------------------------------------------
 
 def parse_metadata(text):
     """
     Return a dict with basic run metadata:
-        converged  – True if "JOB DONE" appears
-        n_scf_iter – number of SCF iterations
-        cpu_time   – total CPU time string
-        wall_time  – total wall time string
+        converged    - True if "JOB DONE" appears
+        total_energy - converged SCF total energy (Ry), or None
+        n_scf_iter   - number of SCF iterations
+        cpu_time     - total CPU time string
+        wall_time    - total wall time string
     """
     result = {}
     result['converged'] = 'JOB DONE' in text
+
+    # "!    total energy              =    -116.35515481 Ry"
+    result['total_energy'] = _first_float(r'!\s+total energy\s+=\s+(.*)', text)
 
     m = re.search(r'convergence has been achieved in\s+(\d+)\s+iterations', text)
     result['n_scf_iter'] = int(m.group(1)) if m else None

@@ -24,13 +24,14 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from parse_output import parse_gtensor, parse_metadata
+from parse_output import parse_gtensor, parse_metadata, parse_orbital_magnetization
 
 # Default tolerances
-ATOL_RMC = 0.05   # ppm
-ATOL_SO  = 1.0    # ppm
-ATOL_MAG = 1e-4   # a.u.
-RTOL     = 1e-4
+ATOL_RMC    = 0.05   # ppm
+ATOL_SO     = 1.0    # ppm
+ATOL_MAG    = 1e-4   # a.u.
+ATOL_ENERGY = 1e-5   # Ry
+RTOL        = 1e-4
 
 
 def _check_close(name, val, ref, atol, rtol=RTOL):
@@ -62,7 +63,7 @@ def _check_close(name, val, ref, atol, rtol=RTOL):
 
 def check_output(out_path, ref_path, *,
                  atol_rmc=ATOL_RMC, atol_so=ATOL_SO,
-                 atol_mag=ATOL_MAG, rtol=RTOL):
+                 atol_mag=ATOL_MAG, atol_energy=ATOL_ENERGY, rtol=RTOL):
     """
     Compare one output file against its reference.
 
@@ -71,9 +72,12 @@ def check_output(out_path, ref_path, *,
     out_text = out_path.read_text()
     ref_text = ref_path.read_text()
 
-    result = parse_gtensor(out_text)
-    ref    = parse_gtensor(ref_text)
-    meta   = parse_metadata(out_text)
+    result   = parse_gtensor(out_text)
+    ref      = parse_gtensor(ref_text)
+    meta     = parse_metadata(out_text)
+    ref_meta = parse_metadata(ref_text)
+    orb      = parse_orbital_magnetization(out_text)
+    orb_ref  = parse_orbital_magnetization(ref_text)
 
     messages = []
     all_ok = True
@@ -85,7 +89,25 @@ def check_output(out_path, ref_path, *,
     else:
         messages.append("  OK   convergence")
 
-    # Quantity checks
+    # SCF total energy
+    ok, msg = _check_close("total energy (Ry)",
+                           meta.get("total_energy"), ref_meta.get("total_energy"),
+                           atol=atol_energy, rtol=rtol)
+    messages.append(msg)
+    if not ok:
+        all_ok = False
+
+    # Intermediate magnetization contributions (without Berry curvature)
+    for key in ("delta_m_bare", "delta_m_para", "delta_m_dia",
+                "m_lc_no_bc", "m_ic_no_bc", "m_tot_no_bc"):
+        ok, msg = _check_close(key, orb.get(key), orb_ref.get(key),
+                               atol=atol_mag, rtol=rtol)
+        messages.append(msg)
+        if not ok:
+            all_ok = False
+
+    # Final g-tensor quantities (use parse_gtensor values which include
+    # m_lc/m_ic/m_tot with Berry curvature via last-occurrence matching)
     checks = [
         ("delta_g_rmc",       atol_rmc),
         ("delta_g_rmc_gipaw", atol_rmc),
@@ -123,6 +145,9 @@ def main():
     parser.add_argument("--atol-mag", type=float, default=ATOL_MAG,
                         dest="atol_mag",
                         help=f"Tolerance for magnetization (a.u.) [default: {ATOL_MAG}]")
+    parser.add_argument("--atol-energy", type=float, default=ATOL_ENERGY,
+                        dest="atol_energy",
+                        help=f"Tolerance for SCF total energy (Ry) [default: {ATOL_ENERGY}]")
     parser.add_argument("--rtol", type=float, default=RTOL,
                         help=f"Relative tolerance [default: {RTOL}]")
     args = parser.parse_args()
@@ -152,7 +177,8 @@ def main():
         passed, messages = check_output(
             out_path, ref_path,
             atol_rmc=args.atol_rmc, atol_so=args.atol_so,
-            atol_mag=args.atol_mag, rtol=args.rtol)
+            atol_mag=args.atol_mag, atol_energy=args.atol_energy,
+            rtol=args.rtol)
         for msg in messages:
             print(msg)
         if passed:
