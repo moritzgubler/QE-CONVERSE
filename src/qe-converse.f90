@@ -52,7 +52,7 @@ PROGRAM qe_converse
   USE wvfct, ONLY: nbnd, nbndx
   USE symm_base,     ONLY : nsym
   USE noncollin_module, ONLY: report
-  USE basis, ONLY: starting_wfc
+  USE starting_scf, ONLY : starting_wfc
   USE buffers,          ONLY : open_buffer, close_buffer, save_buffer
   USE dfunct,             ONLY : newd
   USE orbital_magnetization, ONLY : dvrs

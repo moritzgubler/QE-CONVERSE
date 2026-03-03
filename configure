@@ -1819,7 +1819,7 @@ version=`grep version_number ${qe_source}/include/qe_version.h | cut -d\' -f2`
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $version" >&5
 printf "%s\n" "$version" >&6; }
 case $version in
-  7.2 ) ;;
+  7.5 ) ;;
   *) as_fn_error $? "Cannot compile against this version of Quantum-Espresso" "$LINENO" 5 ;;
 esac
 
