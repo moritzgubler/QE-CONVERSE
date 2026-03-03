@@ -1,0 +1,38 @@
+&CONTROL
+  pseudo_dir = '../../test_pseudos'
+  calculation = 'scf'
+  outdir = './scratch'
+  prefix = 'nacl'
+/
+
+&SYSTEM
+  ibrav = 0
+  nat = 2
+  ntyp = 2
+  ecutwfc = 50
+  nosym = .true.
+  noinv = .true.
+  occupations = 'smearing'
+  smearing = 'fd'
+  degauss = 1.d-8
+/
+
+&ELECTRONS
+  conv_thr = 1.d-10
+/
+
+ATOMIC_SPECIES
+  Na  22.989769  Na.pbesol.upf
+  Cl  35.450000  Cl.pbesol.upf
+
+CELL_PARAMETERS angstrom
+  0.0000000000  2.7940632200  2.7940632200
+  2.7940632200  0.0000000000  2.7940632200
+  2.7940632200  2.7940632200  0.0000000000
+
+ATOMIC_POSITIONS angstrom
+  Na  0.0000000000  0.0000000000  0.0000000000
+  Cl  2.7940632200  2.7940632200  2.7940632200
+
+K_POINTS automatic
+  2 2 2  1 1 1
