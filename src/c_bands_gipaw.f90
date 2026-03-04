@@ -135,7 +135,6 @@ SUBROUTINE c_bands_gipaw ( iter )
      ! ... iterative diagonalization of the next scf iteration
      ! ... and for rho calculation
      !
-     CALL using_evc(0)
      CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
      !
      ! ... beware: with pools, if the number of k-points on different
