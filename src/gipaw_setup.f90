@@ -348,7 +348,7 @@ SUBROUTINE gipaw_setup_integrals
     enddo
     deallocate ( work )
 
-    nmr_shift_core(nt) = nmr_shift_core(nt) * 17.75045395 * 1e-6
+    nmr_shift_core(nt) = nmr_shift_core(nt) * 17.75045395
   enddo
 
 
