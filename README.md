@@ -19,6 +19,7 @@ The QE-CONVERSE implement a non-perturbative approach (converse) to compute the 
 4. ```chmod +x configure```
 5. ```./configure --with-qe-source="QE folder containing make.inc"```
 6. ```make```
+7. ```make test # optionally run tests```
 ## How to use it:
 run ```./qe-converse.x```
 
