@@ -363,17 +363,6 @@ NMR example:
 
 ---
 
-## Known Issues
-
-| Issue | Status |
-|-------|--------|
-| `delta_M_bare = 0` with `npool > 1` | Fixed in `c_bands_gipaw.f90` — always call `save_buffer`. |
-| Wrong `npw` for k-points in `compute_dudk_new` | Fixed — set `npw = ngk(ik)` at start of each k-point iteration. |
-| `orb_magn_IC` 13× too large in parallel | Open — root cause not yet identified. |
-| k-pool parallelism slower than serial | Open — performance issue, not a correctness bug. |
-
----
-
 ## Development Conventions
 
 - **Language:** Fortran 90/95. Follow surrounding style: `implicit none`, `intent` declarations.
