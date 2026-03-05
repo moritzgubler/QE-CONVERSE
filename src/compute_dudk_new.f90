@@ -13,13 +13,14 @@
 SUBROUTINE compute_dudk_new(dudk_method)
   USE kinds,         ONLY : dp
   USE wvfct,         ONLY : npw, nbnd, npwx
-  USE klist,         ONLY : nks, lgauss
+  USE klist,         ONLY : nks, lgauss, ngk
   USE cell_base,     ONLY : tpiba
   USE io_global,     ONLY : stdout
   USE mp_global,     ONLY : my_pool_id, me_pool, root_pool
   USE gipaw_module,  ONLY : q_gipaw, alpha_pv, evq, lambda_so
   USE nmr_mod,      ONLY : m_0
 
+  USE mp_pools,      ONLY : nproc_pool
   USE io_files,      ONLY : nwordwfc, diropn
   USE nmr_mod, ONLY : &
        nmr_dudk_name_x => dudk_name_x, &
@@ -41,6 +42,7 @@ USE orbital_magnetization, ONLY : &
   logical :: exst
   integer :: ik, ipol, occ
   integer, parameter :: iundudk1 = 75, iundudk2 = 76, iundudk3 = 77
+  character(len=100) :: fname
   
   call start_clock ('compute_dudk')
 
@@ -52,6 +54,16 @@ if ( any(m_0 /= 0.0_dp) .and. any(lambda_so /= 0.0_dp) ) then
     write(stdout,*) "Both m_0 and lambda_so are non-zero."
     write(stdout,*) "Current version supports either NMR or g-tensor calculations, not both."
     call errore("compute_dudk_new", "incompatible input: m_0 and lambda_so cannot be both non-zero", 1)
+end if
+
+! --------------------------------------------------------------
+! Force in-memory storage when multiple procs per pool:
+! disk I/O via davcio is not parallel-safe (race condition on
+! shared file records when G-vectors are distributed).
+! --------------------------------------------------------------
+if (nproc_pool > 1 .and. .not. dudk_in_memory) then
+    dudk_in_memory = .true.
+    write(stdout,'(5X,"dudk: forced in-memory storage (nproc_pool=",I0,")")') nproc_pool
 end if
 
 ! --------------------------------------------------------------
@@ -70,15 +82,21 @@ end if
 if (.not. dudk_in_memory) then
   ! NMR mode
   if (any(m_0 /= 0.0_dp)) then
-      call diropn(iundudk1, nmr_dudk_name_x(), 2*nwordwfc, exst)
-      call diropn(iundudk2, nmr_dudk_name_y(), 2*nwordwfc, exst)
-      call diropn(iundudk3, nmr_dudk_name_z(), 2*nwordwfc, exst)
+      write(fname,'(A,".",I0)') trim(nmr_dudk_name_x()), my_pool_id
+      call diropn(iundudk1, trim(fname), 2*nwordwfc, exst)
+      write(fname,'(A,".",I0)') trim(nmr_dudk_name_y()), my_pool_id
+      call diropn(iundudk2, trim(fname), 2*nwordwfc, exst)
+      write(fname,'(A,".",I0)') trim(nmr_dudk_name_z()), my_pool_id
+      call diropn(iundudk3, trim(fname), 2*nwordwfc, exst)
 
   ! g-tensor mode
   else if (any(lambda_so /= 0.0_dp)) then
-      call diropn(iundudk1, om_dudk_name_x(), 2*nwordwfc, exst)
-      call diropn(iundudk2, om_dudk_name_y(), 2*nwordwfc, exst)
-      call diropn(iundudk3, om_dudk_name_z(), 2*nwordwfc, exst)
+      write(fname,'(A,".",I0)') trim(om_dudk_name_x()), my_pool_id
+      call diropn(iundudk1, trim(fname), 2*nwordwfc, exst)
+      write(fname,'(A,".",I0)') trim(om_dudk_name_y()), my_pool_id
+      call diropn(iundudk2, trim(fname), 2*nwordwfc, exst)
+      write(fname,'(A,".",I0)') trim(om_dudk_name_z()), my_pool_id
+      call diropn(iundudk3, trim(fname), 2*nwordwfc, exst)
 
   ! No mode selected → fatal error
   else
@@ -101,12 +119,13 @@ end if
   elseif (trim(dudk_method) == 'covariant') then
     write(stdout,'(''(covariant derivative)'')')
     do ik = 1, nks
+    npw = ngk(ik)  ! set wvfct%npw correctly for this k-point
     call find_nbnd_occ(ik, occ, emin, emax)
     write(stdout,'(5X,''k-point:'',I4,4X,''occ='',I3)') ik, occ
     call dudk_covariant(ik, occ, dudk)
     do ipol = 1, 3
         if (dudk_in_memory) then
-            call store_dudk(dudk(:,:,ipol), ik, ipol, npw, nbnd)
+            call store_dudk(dudk(:,:,ipol), ik, ipol, ngk(ik), nbnd)
         else
             call davcio( dudk(1,1,ipol), 2*nwordwfc, iundudk1 + ipol - 1, ik, +1 )
         endif
@@ -117,13 +136,14 @@ end if
   elseif (trim(dudk_method) == 'singlepoint') then
     write(stdout,'(''(single point)'')')
     do ik = 1, nks
+    npw = ngk(ik)  ! set wvfct%npw correctly for this k-point
     call find_nbnd_occ(ik, occ, emin, emax)
     write(stdout,'(5X,''k-point:'',I4,4X,''occ='',I3)') ik, occ
     call dudk_covariant_single_point(ik, occ, dudk)
 !    call dudk_covariant_single_point_old(ik, occ, dudk)
     do ipol = 1, 3
         if (dudk_in_memory) then
-            call store_dudk(dudk(:,:,ipol), ik, ipol, npw, nbnd)
+            call store_dudk(dudk(:,:,ipol), ik, ipol, ngk(ik), nbnd)
         else
             call davcio( dudk(1,1,ipol), 2*nwordwfc, iundudk1 + ipol - 1, ik, +1 )
         endif
@@ -150,6 +170,7 @@ end if
 
    write(stdout,'(5X,''done with du/dk'',3X,''q_gipaw = '',F8.6)') q_gipaw
    deallocate(dudk)
+   if (allocated(evq)) deallocate(evq)
 
   call stop_clock ('compute_dudk')
 END SUBROUTINE compute_dudk_new
@@ -175,10 +196,10 @@ END SUBROUTINE compute_dudk_new
   IMPLICIT NONE
   !
   complex(dp), external :: zdotc
-  complex(dp), allocatable :: overlap(:,:) 
+  complex(dp), allocatable :: overlap(:,:)
   complex(dp) :: dudk(npwx,nbnd,3)
   real(dp) :: q_gipaw3(3), delta_k
-  integer :: ik, i, occ, sig 
+  integer :: ik, i, occ, sig
   integer :: ibnd, jbnd, ipol
   integer :: ibnd_start, ibnd_end
 
@@ -186,7 +207,7 @@ END SUBROUTINE compute_dudk_new
 
   ! allocate/initialize  overlap matrix and dudk
   allocate(overlap(occ,occ))
-  overlap (:,:) = (0.0_dp, 0.0_dp)   
+  overlap (:,:) = (0.0_dp, 0.0_dp)
   dudk(:,:,:) = (0.0_dp, 0.0_dp)
 
   ! read the wavefunction
@@ -216,7 +237,7 @@ END SUBROUTINE compute_dudk_new
       enddo
 
 #ifdef __MPI
-      call mp_sum( overlap, intra_bgrp_comm )   
+      call mp_sum( overlap, intra_bgrp_comm )
 #endif
       call invert_matrix(occ, overlap) 
 

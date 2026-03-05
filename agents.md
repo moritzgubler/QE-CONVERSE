@@ -7,7 +7,7 @@ It is derived from the source code and the companion publication (Fioccola et al
 
 ## Project Overview
 
-QE-CONVERSE is a standalone Fortran package for Quantum ESPRESSO (QE 7.2+) that computes
+QE-CONVERSE is a standalone Fortran package for Quantum ESPRESSO (QE 7.5) that computes
 **orbital magnetization** non-perturbatively via the *converse* GIPAW method. It replaces the
 original converse routines from the obsolete PWscf 3.2 code.
 
@@ -89,9 +89,10 @@ doc/                    User manual
 examples/               NMR and EPR example inputs (with Tutorial.wiki files)
 applications/           Application-level EPR and NMR calculations
 benchmarking/           Input files for EPR g-tensor benchmarks
+tests/                  Integration and unit tests
 ```
 
-The QE 7.2 source tree is at `/home/moritz/src/q-e/`. Do not modify files there without
+The QE 7.5 source tree is at `/home/moritz/src/q-e/`. Do not modify files there without
 explicit instruction.
 
 ---
@@ -168,7 +169,7 @@ communicator. This improves scalability for large supercell calculations.
 | `h_psi_gipaw.f90` | Applies the GIPAW Hamiltonian to wavefunctions: kinetic energy, local potential, non-local KB, spin-orbit (`H^(1,0)` SO term when `lambda_so≠0`), NMR vector potential (`H^(1,0)` dipole term when `m_0≠0`). Central routine analogous to QE's `h_psi`. |
 | `rotate_wfc_gipaw.f90` | Dispatcher for wavefunction rotation (subspace diagonalisation): routes to serial or parallel, Γ-point or k-point routines. |
 | `rotate_wfc_k_gipaw.f90` | Serial and parallel subspace Hamiltonian diagonalisation in the k-point basis; computes H and S matrices. |
-| `compute_dudk_new.f90` | Computes covariant du/dk: calls `compute_u_kq` for each displaced k±q, builds overlap matrix, inverts, assembles dual states, saves result. Supports in-memory (`dudk_storage`) or disk I/O. After calling `compute_u_kq(ik,0)`, saves `evc` back to `iunwfc`. |
+| `compute_dudk_new.f90` | Computes covariant du/dk: calls `compute_u_kq` for each displaced k±q, builds overlap matrix, inverts, assembles dual states, saves result. Supports in-memory (`dudk_storage`) or disk I/O. After calling `compute_u_kq(ik,0)`, saves `evc` back to `iunwfc`. Forces in-memory storage when `nproc_pool > 1` (disk I/O is not safe with distributed G-vectors). |
 | `compute_u_kq.f90` | Diagonalises H(k+q). Reads `evc` from `iunwfc` as initial guess (line 133); after diagonalisation, restores `evc` from `iunwfc` (lines 193-196) to not corrupt the k-point buffer. |
 | `dudk_storage.f90` | Module providing in-memory buffer management for du/dk matrices; allocates/deallocates storage and handles retrieval for better performance than disk I/O. |
 | `calc_orbital_magnetization.f90` | Computes all orbital magnetization terms: LC, IC (Berry curvature formula), and GIPAW corrections (`delta_M_bare`, `delta_M_para`, `delta_M_dia`) for both EPR and NMR modes. Contains band-group MPI parallelisation over `ibnd`. |
@@ -197,6 +198,15 @@ When `npool > 1`, a single pool may hold only one k-point (`nks = 1`).
 Skipping this causes `compute_u_kq` to restore stale ground-state wavefunctions from the `.wfc`
 disk file, which zeros out `delta_M_bare`.
 
+**du/dk with intra-pool parallelism:** When `nproc_pool > 1`, G-vectors are distributed across
+MPI processes within a pool. `davcio` cannot safely write distributed data to a shared file
+record. `compute_dudk_new` therefore forces `dudk_in_memory = .true.` when `nproc_pool > 1`.
+
+**npw per k-point:** `wvfct%npw` must be set to `ngk(ik)` at the start of each k-point
+iteration in `compute_dudk_new`. Neither `compute_u_kq` nor `diag_bands_gipaw` update the
+global `wvfct%npw` (they use local variables). Failing to set it causes out-of-bounds reads
+of `evc`/`evq` for k-points where `ngk(ik) ≠ ngk(nks)`.
+
 ### Buffer / I/O Conventions
 
 - `io_level = 0`: in-memory buffers (`buiol` in `buffers.f90`).
@@ -215,12 +225,18 @@ disk file, which zeros out `delta_M_bare`.
 tests/
   Makefile                      top-level test runner (unit + integration)
   integration/
-    pyproject.toml              pytest configuration
-    conftest.py                 shared fixtures (binary path, scratch setup, runner)
+    check_gtensor.py            output parser and checker for EPR g-tensor tests
+    check_nmr.py                output parser and checker for NMR shift tests
     parse_output.py             regex parser for QE-CONVERSE stdout
-    test_epr_cf.py              CF g-tensor integration tests
-    reference/
-      cf_gtensor_{1,2,3}.json  reference values from benchmarking/CF/
+    CO+/                        serial EPR g-tensor test (CO+ molecule)
+    CO+_kpools/                 parallel EPR g-tensor test (CO+, npool=2, 4 MPI ranks)
+    nacl_nmr/                   serial NMR chemical shift test (NaCl)
+    nacl_nmr_kpool/             parallel NMR chemical shift test (NaCl, npool=4, 8 MPI ranks)
+    quartz/                     serial NMR chemical shift test (quartz Si, O)
+    <test>/
+      run.sh                    runs pw.x SCF + qe-converse.x, then calls check script
+      reference/                stored reference output files (generated with serial run.sh)
+        run.sh                  regenerates reference values (run locally when physics changes)
   unit/
     Makefile                    downloads test-drive, builds and runs unit tests
     test_util.f90               test-drive test module (trace, principal_axis)
@@ -228,43 +244,36 @@ tests/
     testdrive.F90               auto-downloaded from fortran-lang/test-drive
 ```
 
-### Integration tests (pytest)
+### Integration tests
 
-**Framework:** pytest + numpy
-**What is tested:** the full binary end-to-end against stored reference values.
+**What is tested:** the full binary end-to-end against stored reference output values.
 
-Prerequisites:
-1. `make` in the repo root (binary at `bin/qe-converse.x`).
-2. A completed pw.x SCF for the CF molecule:
-   ```bash
-   cd benchmarking/CF
-   mpirun -np 6 pw.x -in CF_scf.in > CF_scf.out
-   ```
-   This produces `benchmarking/CF/scratch/CF.save/`.
+Each test directory has a `run.sh` that:
+1. Runs `pw.x` SCF.
+2. Runs `qe-converse.x` (serially or with `mpirun --oversubscribe`).
+3. Calls `check_gtensor.py` or `check_nmr.py` to compare against `reference/`.
 
-Run serial:
+**Environment variables required:**
+```bash
+export QECONVERSE=/path/to/bin/qe-converse.x
+export PW=pw.x   # or full path to pw.x
+```
+
+**Run all integration tests:**
 ```bash
 make -C tests integration
-# or directly:
-cd tests/integration && pytest -v
+# or individually:
+cd tests/integration/CO+ && bash run.sh
 ```
 
-Run parallel (e.g. npool=2, 2 MPI ranks):
-```bash
-make -C tests integration-parallel NP=2 NPOOL=2
-```
+**Parallel tests** use `mpirun --oversubscribe` so they run on CI machines with fewer cores
+than MPI ranks requested.
 
-Pass custom paths:
-```bash
-pytest --bin=/path/to/qe-converse.x --cf-save=/path/to/scratch
-```
+**Regenerating reference values:** run `bash run.sh` inside the `reference/` subdirectory
+of a test using the serial binary. Do this whenever a physics-changing bug fix alters results.
 
-The `conftest.py` skips all tests gracefully if the binary or SCF save
-directory is not found — no hard failures in CI when the data is unavailable.
-
-**Key design decisions:**
-- The scratch directory is populated with **symlinks** to the original SCF files (not copies). Wavefunction files are large; `io_level=0` in newscf means they are never written back to disk during the test, so the originals are safe.
-- Tolerances: `atol=1.0 ppm` for g-tensor vectors, `atol=0.05 ppm` for scalars. Generous enough to survive compiler/library differences, tight enough to catch wrong physics.
+**Tolerances:** set per-test in the check scripts (typically `atol=1.0 ppm` for g-tensor,
+`atol=2.0 ppm` for NMR shift).
 
 ### Unit tests (test-drive)
 
@@ -286,11 +295,10 @@ MPI and can be run as a plain serial executable.
 
 ### Adding new tests
 
-**New integration test case (e.g. NMR quartz):**
-1. Run pw.x + qe-converse.x for the system; save the scratch directory.
-2. Add reference values as `tests/integration/reference/<name>.json`.
-3. Add a fixture in `conftest.py` for the new scratch directory.
-4. Write `tests/integration/test_nmr_<name>.py` following the CF template.
+**New integration test case:**
+1. Create `tests/integration/<name>/` with `run.sh`, input files, and `reference/run.sh`.
+2. Run `bash reference/run.sh` to generate reference output.
+3. Add the test to `INTEGRATION_TESTS` in `tests/Makefile`.
 
 **New unit test:**
 1. Add a `subroutine test_<name>(error)` to `tests/unit/test_util.f90`.
@@ -355,25 +363,14 @@ NMR example:
 
 ---
 
-## Known Issues
-
-| Issue | Status |
-|-------|--------|
-| `delta_M_bare = 0` with `npool > 1` | Fixed in `c_bands_gipaw.f90` — always call `save_buffer`. |
-| `orb_magn_IC` 13× too large in parallel | Open — root cause not yet identified. |
-| k-pool parallelism slower than serial | Open — performance issue, not a correctness bug. |
-| Diagnostic prints in `calc_orbital_magnetization.f90` | Remove once testing is complete. |
-
----
-
 ## Development Conventions
 
 - **Language:** Fortran 90/95. Follow surrounding style: `implicit none`, `intent` declarations.
 - **MPI:** Use QE's internal wrappers (`mp_sum`, `mp_bcast`, etc.). Never call raw MPI directly.
-- **Testing:** Always run both serial (`npool=1`) and parallel (`npool=2`, `npool=8`) to catch
-  pool-parallelism bugs.
+- **Testing:** Always run both serial (`npool=1`) and parallel (`npool=2`, `npool=4`) to catch
+  pool-parallelism bugs. Use `make -C tests integration` to run the full test suite.
 - **Do not commit** compiled artefacts (`.o`, `.mod`, `.x`).
-- **External dependency:** QE 7.2 API. Avoid relying on QE internal routines outside the stable
+- **External dependency:** QE 7.5 API. Avoid relying on QE internal routines outside the stable
   public interface.
 - **Pseudopotentials:** GIPAW norm-conserving only. Library at
   https://sites.google.com/site/dceresoli/pseudopotentials

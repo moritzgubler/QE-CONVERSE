@@ -80,7 +80,7 @@
   allocate (dudk_bra(npwx,nbnd), dudk_ket(npwx,nbnd), hpsi(npwx))
   
   call start_clock ('orbital_magnetization')
-  
+
   write(stdout,*)
   write(stdout,'(5X,''Computing the orbital magnetization (bohr mag/cell):'')')
   berry_curvature = 0.d0
@@ -95,8 +95,8 @@
   allocate(dbecp(nkb,nbnd,3), paw_dbecp(paw_nkb,nbnd,3))
   allocate(vkb_save(npwx,nkb), aux(nkb,nbnd))
 #define __USE_BARRIER
-   
-  CALL set_dvrs( dvrs, vrs, dfftp%nnr, nspin ) 
+
+  CALL set_dvrs( dvrs, vrs, dfftp%nnr, nspin )
    ! loop over k-points
   do ik = 1, nks
     npw = ngk(ik)
@@ -118,7 +118,7 @@
       CALL calbec( npw, vkb, evc, becp, nbnd )
     endif
 !    if (lda_plus_u) call davcio(swfcatom, nwordatwfc, iunsat, ik, -1)
-   
+
     ! compute the diamagnetic terms
     call init_gipaw_2(ngk(ik), igk_k(1,current_k), xk(1,current_k), paw_vkb)
     call calbec( npw, paw_vkb, evc, paw_becp, nbnd )
@@ -140,7 +140,7 @@
         call davcio(dudk_bra, 2*nwordwfc, iundudk1 + ii - 1, ik, -1)
         call davcio(dudk_ket, 2*nwordwfc, iundudk1 + jj - 1, ik, -1)
       endif
-      
+
       ! compute the orbital magnetization
       kp_berry(kk) = 0.d0
       kp_M_IC(kk) = 0.d0
@@ -160,7 +160,7 @@
         braket = zdotc(ngk(ik), dudk_bra(1,ibnd), 1, hpsi, 1)
         kp_M_LC(kk) = kp_M_LC(kk) + wg(ibnd,ik)*imag(braket)
         orb_magn_LC(kk) = orb_magn_LC(kk) + wg(ibnd,ik)*imag(braket)
-        
+
         call h_psi_gipaw(npwx, ngk(ik), 1, dudk_bra(1:npwx,ibnd), hpsi)
         braket = zdotc(ngk(ik), dudk_ket(1,ibnd), 1, hpsi, 1)
         kp_M_LC(kk) = kp_M_LC(kk) - wg(ibnd,ik)*imag(braket)
@@ -181,28 +181,28 @@
   call mp_sum( kp_M_LC, inter_bgrp_comm )
   call mp_sum( kp_M_IC, inter_bgrp_comm )
 #endif
-  
+
     if (me_pool == root_pool) then
       write(*,'(''BC: k-point:'',I5,2X,''pool:'',I4,4X,9F12.6)') ik, my_pool_id+1, kp_berry
       write(*,'(''LC: k-point:'',I5,2X,''pool:'',I4,4X,9F12.6)') ik, my_pool_id+1, kp_M_LC*rydtohar
       write(*,'(''IC: k-point:'',I5,2X,''pool:'',I4,4X,9F12.6)') ik, my_pool_id+1, kp_M_IC*rydtohar
-!      write(*,'(5X,''k-point:'',I4,4X,''pool:'',I4,4X,3(F10.4),/,5X,(9F12.6))') &
-!            ik, my_pool_id+1, xk(:,ik), kp_berry, kp_M_LC*rydtohar, kp_M_IC*rydtohar
     endif
   enddo !ik
-  
+
 #ifdef __MPI
- ! no reduction for delta_M_bare and delta_M_para and delta_M_dia
   call mp_sum(orb_magn_LC, intra_bgrp_comm )
   call mp_sum(orb_magn_IC, intra_bgrp_comm )
   call mp_sum(berry_curvature, intra_bgrp_comm )
   call mp_sum(orb_magn_LC, inter_bgrp_comm )
   call mp_sum(orb_magn_IC, inter_bgrp_comm )
   call mp_sum(berry_curvature, inter_bgrp_comm )
+  call mp_sum(orb_magn_LC, inter_pool_comm )
+  call mp_sum(orb_magn_IC, inter_pool_comm )
+  call mp_sum(berry_curvature, inter_pool_comm )
+  call mp_sum(delta_M_bare, inter_pool_comm )
+  call mp_sum(delta_M_para, inter_pool_comm )
+  call mp_sum(delta_M_dia, inter_pool_comm )
 #endif
-  
-  ! no reduction for delta_M_bare and delta_M_para and delta_M_dia 
-
 
   ! close files (only if not using in-memory storage)
   if (.not. dudk_in_memory) then
@@ -360,8 +360,6 @@
         endif
       enddo
     enddo
-    !PRINT*, mpime, kk, -2.d0*tmp
-    ! check the sign and real or imag!!
     delta_M_bare(kk) = delta_M_bare(kk) - 2.d0*imag(tmp)
     END SUBROUTINE calc_delta_M_bare
 
@@ -592,9 +590,10 @@
     delta_rmc_gipaw = delta_rmc_gipaw + s_weight * tmp
 
   enddo
-! no reduction for delta_rmc_gipaw
 #if defined(__MPI)
   CALL mp_sum( delta_rmc, intra_bgrp_comm )
+  CALL mp_sum( delta_rmc, inter_pool_comm )
+  CALL mp_sum( delta_rmc_gipaw, inter_pool_comm )
 #endif
 
 

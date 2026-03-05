@@ -1,5 +1,5 @@
 
-     Program QE-CONVERSE v.7.2 starts on  2Mar2026 at 12:13:11 
+     Program QE-CONVERSE v.7.5 starts on  5Mar2026 at  9:17:17 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -14,7 +14,7 @@
 
      MPI processes distributed on     1 nodes
      R & G space division:  proc/nbgrp/npool/nimage =       4
-     4227 MiB available memory on the printing compute node when the environment starts
+     6612 MiB available memory on the printing compute node when the environment starts
 
 
      Reading xml data from directory:
@@ -39,40 +39,52 @@
 
      Reading collected, re-writing distributed wavefunctions
      GIPAW projectors -----------------------------------------------
-     atom=  Si   l=0  rc=    2.0000  rs=    1.3333
-     atom=  Si   l=0  rc=    2.0000  rs=    1.3333
-     atom=  Si   l=1  rc=    2.0000  rs=    1.3333
-     atom=  Si   l=1  rc=    2.0000  rs=    1.3333
-     atom=  Si   l=2  rc=    2.0000  rs=    1.3333
-     atom=  Si   l=2  rc=    2.0000  rs=    1.3333
+     atom=Si     l=0  rc=    2.0000  rs=    1.3333
+     atom=Si     l=0  rc=    2.0000  rs=    1.3333
+     atom=Si     l=1  rc=    2.0000  rs=    1.3333
+     atom=Si     l=1  rc=    2.0000  rs=    1.3333
+     atom=Si     l=2  rc=    2.0000  rs=    1.3333
+     atom=Si     l=2  rc=    2.0000  rs=    1.3333
      projs nearly linearly dependent: l=1  n1,n2= 1, 2  s=  0.99854623
      projs nearly linearly dependent: l=2  n1,n2= 1, 2  s=  0.99998260
 
-     atom=  O    l=0  rc=    1.4000  rs=    0.9333
-     atom=  O    l=0  rc=    1.4000  rs=    0.9333
-     atom=  O    l=1  rc=    1.4000  rs=    0.9333
-     atom=  O    l=1  rc=    1.4000  rs=    0.9333
+     atom=O      l=0  rc=    1.4000  rs=    0.9333
+     atom=O      l=0  rc=    1.4000  rs=    0.9333
+     atom=O      l=1  rc=    1.4000  rs=    0.9333
+     atom=O      l=1  rc=    1.4000  rs=    0.9333
      projs nearly linearly dependent: l=1  n1,n2= 1, 2  s=  0.99858905
      -----------------------------------------------------------------
 
      GIPAW integrals: -------------------------------------------
-     Atom  i/j   nmr_para    nmr_dia     epr_rmc    epr_para     epr_dia
-       Si  1 1  0.1165E+04  0.2849E+00  0.9094E+01  0.3278E+05  0.8870E+01
-       Si  2 1  -.1179E+04  -.2197E+00  -.9305E+01  -.3324E+05  -.8737E+01
-       Si  2 2  0.1192E+04  0.1211E+00  0.9407E+01  0.3371E+05  0.8584E+01
-       Si  3 3  0.1393E+02  0.3232E+00  0.7840E+01  0.3596E+03  0.8884E+01
-       Si  4 3  0.1404E+02  0.3109E+00  0.7880E+01  0.3633E+03  0.8818E+01
-       Si  4 4  0.1414E+02  0.2976E+00  0.7912E+01  0.3671E+03  0.8759E+01
-       Si  5 5  0.1290E+00  0.1880E-01  0.1957E+00  0.4041E+01  0.3892E+00
-       Si  6 5  0.1313E+00  0.1949E-01  0.2010E+00  0.4104E+01  0.3999E+00
-       Si  6 6  0.1336E+00  0.2020E-01  0.2065E+00  0.4168E+01  0.4110E+00
-       O   1 1  0.1149E+04  0.2316E+00  0.8411E+01  0.1903E+05  0.5983E+01
-       O   2 1  0.1170E+04  0.4805E-01  0.8370E+01  0.1952E+05  0.4733E+01
-       O   2 2  0.1189E+04  -.1472E+00  0.7956E+01  0.2002E+05  0.3721E+01
-       O   3 3  0.4175E+01  0.1179E+00  0.1114E+01  0.9580E+02  0.2214E+01
-       O   4 3  0.4686E+01  0.1552E+00  0.1377E+01  0.1054E+03  0.2733E+01
-       O   4 4  0.5248E+01  0.1959E+00  0.1691E+01  0.1160E+03  0.3329E+01
+     Atom  i/j   nmr_para   nmr_dia   epr_rmc  epr_para   epr_dia
+     Si    1 1   0.12E+04  0.28E+00  0.91E+01  0.33E+05  0.89E+01
+     Si    2 1  -0.12E+04 -0.22E+00 -0.93E+01 -0.33E+05 -0.87E+01
+     Si    2 2   0.12E+04  0.12E+00  0.94E+01  0.34E+05  0.86E+01
+     Si    3 3   0.14E+02  0.32E+00  0.78E+01  0.36E+03  0.89E+01
+     Si    4 3   0.14E+02  0.31E+00  0.79E+01  0.36E+03  0.88E+01
+     Si    4 4   0.14E+02  0.30E+00  0.79E+01  0.37E+03  0.88E+01
+     Si    5 5   0.13E+00  0.19E-01  0.20E+00  0.40E+01  0.39E+00
+     Si    6 5   0.13E+00  0.19E-01  0.20E+00  0.41E+01  0.40E+00
+     Si    6 6   0.13E+00  0.20E-01  0.21E+00  0.42E+01  0.41E+00
+     O     1 1   0.11E+04  0.23E+00  0.84E+01  0.19E+05  0.60E+01
+     O     2 1   0.12E+04  0.48E-01  0.84E+01  0.20E+05  0.47E+01
+     O     2 2   0.12E+04 -0.15E+00  0.80E+01  0.20E+05  0.37E+01
+     O     3 3   0.42E+01  0.12E+00  0.11E+01  0.96E+02  0.22E+01
+     O     4 3   0.47E+01  0.16E+00  0.14E+01  0.11E+03  0.27E+01
+     O     4 4   0.52E+01  0.20E+00  0.17E+01  0.12E+03  0.33E+01
      ------------------------------------------------------------
+
+     alpha_pv=     39.0347 eV
+
+     Number of occupied bands for each k-point:
+     k-point:     1    nbnd_occ=  24
+     k-point:     2    nbnd_occ=  24
+     k-point:     3    nbnd_occ=  24
+     k-point:     4    nbnd_occ=  24
+     k-point:     5    nbnd_occ=  24
+     k-point:     6    nbnd_occ=  24
+     k-point:     7    nbnd_occ=  24
+     k-point:     8    nbnd_occ=  24
 
 
 
@@ -151,8 +163,8 @@
                 l(1) =   0
 
      atomic species   valence    mass     pseudopotential
-        Si             4.00    28.08600     Si( 1.00)
-        O              6.00    15.99900     O ( 1.00)
+     Si                4.00    28.08600     Si( 1.00)
+     O                 6.00    15.99900     O ( 1.00)
 
      No symmetry found
 
@@ -173,28 +185,28 @@
    Cartesian axes
 
      site n.     atom                  positions (alat units)
-         1           Si  tau(   1) = (   0.4701000  -0.8142405   0.7333333  )
-         2           Si  tau(   2) = (   0.4701000   0.8142405   1.4666667  )
-         3           Si  tau(   3) = (  -0.9402000   0.0000000   0.0000000  )
-         4           O   tau(   4) = (   0.6813000  -0.2537465   0.4716800  )
-         5           O   tau(   5) = (  -0.1209000   0.7168988   1.2050133  )
-         6           O   tau(   6) = (  -0.5604000  -0.4631523   1.9383467  )
-         7           O   tau(   7) = (   0.6813000   0.2537465  -0.4716800  )
-         8           O   tau(   8) = (  -0.1209000  -0.7168988   0.9949867  )
-         9           O   tau(   9) = (  -0.5604000   0.4631523   0.2616533  )
+         1        Si     tau(   1) = (   0.4701000  -0.8142405   0.7333333  )
+         2        Si     tau(   2) = (   0.4701000   0.8142405   1.4666667  )
+         3        Si     tau(   3) = (  -0.9402000   0.0000000   0.0000000  )
+         4        O      tau(   4) = (   0.6813000  -0.2537465   0.4716800  )
+         5        O      tau(   5) = (  -0.1209000   0.7168988   1.2050133  )
+         6        O      tau(   6) = (  -0.5604000  -0.4631523   1.9383467  )
+         7        O      tau(   7) = (   0.6813000   0.2537465  -0.4716800  )
+         8        O      tau(   8) = (  -0.1209000  -0.7168988   0.9949867  )
+         9        O      tau(   9) = (  -0.5604000   0.4631523   0.2616533  )
 
    Crystallographic axes
 
      site n.     atom                  positions (cryst. coord.)
-         1           Si  tau(   1) = (  0.4701000  0.0000000  0.3333333  )
-         2           Si  tau(   2) = (  0.0000000  0.4701000  0.6666667  )
-         3           Si  tau(   3) = ( -0.4701000 -0.4701000  0.0000000  )
-         4           O   tau(   4) = (  0.4139000  0.2674000  0.2144000  )
-         5           O   tau(   5) = ( -0.2674000  0.1465000  0.5477333  )
-         6           O   tau(   6) = ( -0.1465000 -0.4139000  0.8810667  )
-         7           O   tau(   7) = (  0.2674000  0.4139000 -0.2144000  )
-         8           O   tau(   8) = (  0.1465000 -0.2674000  0.4522667  )
-         9           O   tau(   9) = ( -0.4139000 -0.1465000  0.1189333  )
+         1        Si     tau(   1) = (  0.4701000  0.0000000  0.3333333  )
+         2        Si     tau(   2) = (  0.0000000  0.4701000  0.6666667  )
+         3        Si     tau(   3) = ( -0.4701000 -0.4701000  0.0000000  )
+         4        O      tau(   4) = (  0.4139000  0.2674000  0.2144000  )
+         5        O      tau(   5) = ( -0.2674000  0.1465000  0.5477333  )
+         6        O      tau(   6) = ( -0.1465000 -0.4139000  0.8810667  )
+         7        O      tau(   7) = (  0.2674000  0.4139000 -0.2144000  )
+         8        O      tau(   8) = (  0.1465000 -0.2674000  0.4522667  )
+         9        O      tau(   9) = ( -0.4139000 -0.1465000  0.1189333  )
 
      number of k points=     8
                        cart. coord. in units 2pi/alat
@@ -218,135 +230,157 @@
         k(    8) = (  -0.5000000  -0.5000000  -0.5000000), wk =   0.2500000
 
      Dense  grid:    36297 G-vectors     FFT dimensions: (  45,  45,  45)
+     Message from routine init_vloc:
+     Interpolation table for Vloc re-allocated
 
      Initial potential from superposition of free atoms
 
      starting charge      46.4147, renormalised to      48.0000
      Starting wfcs are   75 atomic wfcs
 
+     total cpu time spent up to now is       -1.0 secs
+
      Self-consistent Calculation
 
      iteration #  1     ecut=    50.00 Ry     beta= 0.50
-     Davidson diagonalization with overlap 
+     Davidson diagonalization with overlap
 
 ---- Real-time Memory Report at c_bands before calling an iterative solver
-           238 MiB given to the printing process from OS
+           239 MiB given to the printing process from OS
              0 MiB allocation reported by mallinfo(arena+hblkhd)
-          4141 MiB available memory on the node where the printing process lives
+          6529 MiB available memory on the node where the printing process lives
 ------------------
      ethr =  1.00E-08,  avg # of iterations = 13.8
 
+     total cpu time spent up to now is       -1.0 secs
+
      total energy              =    -215.94606749 Ry
      Harris-Foulkes estimate   =    -216.36854660 Ry
-     estimated scf accuracy    <       0.86801346 Ry
+     estimated scf accuracy    <       0.86801347 Ry
 
      iteration #  2     ecut=    50.00 Ry     beta= 0.50
-     Davidson diagonalization with overlap 
+     Davidson diagonalization with overlap
 
 ---- Real-time Memory Report at c_bands before calling an iterative solver
            243 MiB given to the printing process from OS
              0 MiB allocation reported by mallinfo(arena+hblkhd)
-          4145 MiB available memory on the node where the printing process lives
+          6491 MiB available memory on the node where the printing process lives
 ------------------
      ethr =  1.81E-03,  avg # of iterations =  2.0
+
+     total cpu time spent up to now is       -1.0 secs
 
      total energy              =    -216.13585281 Ry
      Harris-Foulkes estimate   =    -216.15722401 Ry
      estimated scf accuracy    <       0.08424972 Ry
 
      iteration #  3     ecut=    50.00 Ry     beta= 0.50
-     Davidson diagonalization with overlap 
+     Davidson diagonalization with overlap
 
 ---- Real-time Memory Report at c_bands before calling an iterative solver
-           243 MiB given to the printing process from OS
+           244 MiB given to the printing process from OS
              0 MiB allocation reported by mallinfo(arena+hblkhd)
-          4147 MiB available memory on the node where the printing process lives
+          6493 MiB available memory on the node where the printing process lives
 ------------------
      ethr =  1.76E-04,  avg # of iterations =  2.0
+
+     total cpu time spent up to now is       -1.0 secs
 
      total energy              =    -216.14991841 Ry
      Harris-Foulkes estimate   =    -216.14711595 Ry
      estimated scf accuracy    <       0.01303144 Ry
 
      iteration #  4     ecut=    50.00 Ry     beta= 0.50
-     Davidson diagonalization with overlap 
+     Davidson diagonalization with overlap
 
 ---- Real-time Memory Report at c_bands before calling an iterative solver
-           243 MiB given to the printing process from OS
+           244 MiB given to the printing process from OS
              0 MiB allocation reported by mallinfo(arena+hblkhd)
-          4138 MiB available memory on the node where the printing process lives
+          6492 MiB available memory on the node where the printing process lives
 ------------------
      ethr =  2.71E-05,  avg # of iterations =  2.1
 
-     total energy              =    -216.15050588 Ry
+     total cpu time spent up to now is       -1.0 secs
+
+     total energy              =    -216.15050587 Ry
      Harris-Foulkes estimate   =    -216.15047801 Ry
      estimated scf accuracy    <       0.00009107 Ry
 
      iteration #  5     ecut=    50.00 Ry     beta= 0.50
-     Davidson diagonalization with overlap 
+     Davidson diagonalization with overlap
 
 ---- Real-time Memory Report at c_bands before calling an iterative solver
-           243 MiB given to the printing process from OS
+           244 MiB given to the printing process from OS
              0 MiB allocation reported by mallinfo(arena+hblkhd)
-          4139 MiB available memory on the node where the printing process lives
+          6494 MiB available memory on the node where the printing process lives
 ------------------
      ethr =  1.90E-07,  avg # of iterations =  4.5
 
+     total cpu time spent up to now is       -1.0 secs
+
      total energy              =    -216.15054815 Ry
-     Harris-Foulkes estimate   =    -216.15054851 Ry
+     Harris-Foulkes estimate   =    -216.15054850 Ry
      estimated scf accuracy    <       0.00003433 Ry
 
      iteration #  6     ecut=    50.00 Ry     beta= 0.50
-     Davidson diagonalization with overlap 
+     Davidson diagonalization with overlap
 
 ---- Real-time Memory Report at c_bands before calling an iterative solver
-           245 MiB given to the printing process from OS
+           244 MiB given to the printing process from OS
              0 MiB allocation reported by mallinfo(arena+hblkhd)
-          4133 MiB available memory on the node where the printing process lives
+          6493 MiB available memory on the node where the printing process lives
 ------------------
      ethr =  7.15E-08,  avg # of iterations =  2.0
 
+     total cpu time spent up to now is       -1.0 secs
+
      total energy              =    -216.15055533 Ry
-     Harris-Foulkes estimate   =    -216.15056375 Ry
+     Harris-Foulkes estimate   =    -216.15056374 Ry
      estimated scf accuracy    <       0.00001557 Ry
 
      iteration #  7     ecut=    50.00 Ry     beta= 0.50
-     Davidson diagonalization with overlap 
+     Davidson diagonalization with overlap
 
 ---- Real-time Memory Report at c_bands before calling an iterative solver
            245 MiB given to the printing process from OS
              0 MiB allocation reported by mallinfo(arena+hblkhd)
-          4149 MiB available memory on the node where the printing process lives
+          6492 MiB available memory on the node where the printing process lives
 ------------------
      ethr =  3.24E-08,  avg # of iterations =  2.0
 
-     total energy              =    -216.15055806 Ry
+     total cpu time spent up to now is       -1.0 secs
+
+     total energy              =    -216.15055805 Ry
      Harris-Foulkes estimate   =    -216.15055788 Ry
      estimated scf accuracy    <       0.00000031 Ry
 
      iteration #  8     ecut=    50.00 Ry     beta= 0.50
-     Davidson diagonalization with overlap 
+     Davidson diagonalization with overlap
 
 ---- Real-time Memory Report at c_bands before calling an iterative solver
            245 MiB given to the printing process from OS
              0 MiB allocation reported by mallinfo(arena+hblkhd)
-          4082 MiB available memory on the node where the printing process lives
+          6495 MiB available memory on the node where the printing process lives
 ------------------
      ethr =  6.45E-10,  avg # of iterations =  2.9
 
-     total energy              =    -216.15055813 Ry
+     total cpu time spent up to now is       -1.0 secs
+
+     total energy              =    -216.15055812 Ry
      Harris-Foulkes estimate   =    -216.15055813 Ry
      estimated scf accuracy    <       0.00000002 Ry
 
      iteration #  9     ecut=    50.00 Ry     beta= 0.50
-     Davidson diagonalization with overlap 
+     Davidson diagonalization with overlap
 
 ---- Real-time Memory Report at c_bands before calling an iterative solver
            245 MiB given to the printing process from OS
              0 MiB allocation reported by mallinfo(arena+hblkhd)
-          4092 MiB available memory on the node where the printing process lives
+          6491 MiB available memory on the node where the printing process lives
 ------------------
      ethr =  3.50E-11,  avg # of iterations =  2.0
+
+     total cpu time spent up to now is       -1.0 secs
 
      End of self-consistent calculation
 
@@ -467,6 +501,9 @@
      ewald contribution        =    -138.96196445 Ry
 
      convergence has been achieved in   9 iterations
+     dudk: forced in-memory storage (nproc_pool=4)
+     Allocating in-memory storage for dudk
+     Memory required:      10.55 MB
      Computing du/dk (covariant derivative)
      k-point:   1    occ= 24
      compute_u_kq: q = (    0.0000,    0.0000,    0.0000)
@@ -1151,26 +1188,26 @@
      done with du/dk   q_gipaw = 0.010000
 
      Computing the orbital magnetization (bohr mag/cell):
-BC: k-point:    1  pool:   1        0.000021   -0.000004    0.000168
-LC: k-point:    1  pool:   1        0.000005   -0.000001    0.000065
+BC: k-point:    1  pool:   1        0.000020   -0.000005    0.000167
+LC: k-point:    1  pool:   1        0.000009    0.000002    0.000069
 IC: k-point:    1  pool:   1        0.000003   -0.000002   -0.000008
-BC: k-point:    2  pool:   1        0.000017   -0.000015    0.000060
-LC: k-point:    2  pool:   1        0.000014   -0.000005    0.000041
+BC: k-point:    2  pool:   1        0.000016   -0.000014    0.000060
+LC: k-point:    2  pool:   1        0.000008   -0.000001    0.000042
 IC: k-point:    2  pool:   1        0.000003   -0.000003   -0.000022
 BC: k-point:    3  pool:   1       -0.000032    0.000001   -0.000069
-LC: k-point:    3  pool:   1       -0.000010   -0.000001    0.000007
+LC: k-point:    3  pool:   1       -0.000009    0.000004    0.000002
 IC: k-point:    3  pool:   1       -0.000007   -0.000001   -0.000041
-BC: k-point:    4  pool:   1       -0.000007    0.000014   -0.000038
-LC: k-point:    4  pool:   1       -0.000001    0.000008    0.000012
+BC: k-point:    4  pool:   1       -0.000007    0.000014   -0.000039
+LC: k-point:    4  pool:   1        0.000000    0.000009    0.000012
 IC: k-point:    4  pool:   1       -0.000003    0.000003   -0.000036
-BC: k-point:    5  pool:   1        0.000003    0.000007    0.000023
-LC: k-point:    5  pool:   1       -0.000001    0.000009    0.000036
+BC: k-point:    5  pool:   1        0.000003    0.000007    0.000024
+LC: k-point:    5  pool:   1        0.000003    0.000006    0.000037
 IC: k-point:    5  pool:   1        0.000000    0.000001   -0.000025
-BC: k-point:    6  pool:   1        0.000045   -0.000037    0.000043
-LC: k-point:    6  pool:   1        0.000015   -0.000008    0.000042
+BC: k-point:    6  pool:   1        0.000046   -0.000037    0.000043
+LC: k-point:    6  pool:   1        0.000018   -0.000008    0.000041
 IC: k-point:    6  pool:   1        0.000009   -0.000007   -0.000022
 BC: k-point:    7  pool:   1       -0.000022    0.000001   -0.000070
-LC: k-point:    7  pool:   1       -0.000006    0.000000    0.000004
+LC: k-point:    7  pool:   1       -0.000004    0.000003    0.000003
 IC: k-point:    7  pool:   1       -0.000004   -0.000001   -0.000041
 BC: k-point:    8  pool:   1       -0.000011    0.000027   -0.000054
 LC: k-point:    8  pool:   1       -0.000001    0.000012    0.000007
@@ -1179,53 +1216,62 @@ IC: k-point:    8  pool:   1       -0.000002    0.000004   -0.000039
      SPIN-ORBIT:
      lambda_so          =       0.000000      0.000000      0.000000
 
-     Berry curvature    =       0.000016     -0.000007      0.000062
+     Berry curvature    =       0.000013     -0.000006      0.000062
      Fermi energy       =       0.411302 rydberg
 
      NUCLEAR DIPOLE ON ATOM   4:
      m_0                =       0.000000      0.000000      1.414214
 
      (without Berry curvature term)
-     M_LC               =       0.000030      0.000027      0.000429
-     M_IC               =      -0.000000     -0.000011     -0.000471
+     M_LC               =       0.000049      0.000053      0.000424
+     M_IC               =      -0.000001     -0.000011     -0.000471
      Delta_M_bare       =       0.000004      0.000007      0.000222
      Delta_M_para       =      -0.000000     -0.000001     -0.000006
      Delta_M_dia        =       0.000000      0.000000     -0.000017
-     M_tot              =       0.000033      0.000023      0.000157
+     M_tot              =       0.000052      0.000049      0.000152
 
      (with Berry curvature term)
-     M_LC               =       0.000023      0.000030      0.000403
-     M_IC               =      -0.000007     -0.000008     -0.000496
+     M_LC               =       0.000044      0.000055      0.000399
+     M_IC               =      -0.000006     -0.000008     -0.000497
      Delta_M            =       0.000003      0.000007      0.000199
-     M_tot              =       0.000020      0.000029      0.000106
+     M_tot              =       0.000040      0.000053      0.000101
 
      NUCLEAR DIPOLE ON ATOM   4 (O  ):
      m_0                =       0.000000      0.000000      1.414214
-     Chemical shift (ppm):       -9.8085      -14.3632      -53.0205
+     Chemical shift (ppm):      -20.2221      -26.7250      -50.5990
      Core shift     (ppm):      271.0758
 
-     QE-CONVERSE  :     26.93s CPU     28.02s WALL
+     QE-CONVERSE  :     26.14s CPU     27.14s WALL
 
 
-   This run was terminated on:  12:13:39   2Mar2026            
+   This run was terminated on:   9:17:44   5Mar2026            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
 =------------------------------------------------------------------------------=
      Initialization:
 
-     read_file    :      0.32s CPU      0.34s WALL (       1 calls)
-     gipaw_setup  :      0.02s CPU      0.02s WALL (       1 calls)
-     wfcinit      :      0.67s CPU      0.70s WALL (       1 calls)
-     hinit0       :      0.05s CPU      0.05s WALL (       1 calls)
-     potinit      :      0.07s CPU      0.08s WALL (       1 calls)
+     read_file    :      0.21s CPU      0.21s WALL (       1 calls)
+     gipaw_setup  :      0.06s CPU      0.06s WALL (       1 calls)
+     wfcinit      :      0.64s CPU      0.68s WALL (       1 calls)
+     hinit0       :      0.01s CPU      0.01s WALL (       1 calls)
+     potinit      :      0.01s CPU      0.02s WALL (       1 calls)
 
      SCF calculation:
 
-     electrons    :      7.66s CPU      7.99s WALL (       1 calls)
-     h_psi        :     23.27s CPU     24.28s WALL (    2066 calls)
+     electrons    :      7.55s CPU      7.87s WALL (       1 calls)
+     h_psi        :     22.71s CPU     23.64s WALL (    2066 calls)
 
      g-tensor:
 
-     compute_dudk :     15.45s CPU     16.07s WALL (       1 calls)
-     orbital_magn :      2.69s CPU      2.78s WALL (       1 calls)
+     compute_dudk :     15.16s CPU     15.72s WALL (       1 calls)
+     orbital_magn :      2.49s CPU      2.57s WALL (       1 calls)
+     om_alloc     :      0.00s CPU      0.00s WALL (       1 calls)
+     om_setdvrs   :      0.00s CPU      0.00s WALL (       1 calls)
+     om_setup     :      0.02s CPU      0.02s WALL (       8 calls)
+     om_dbecp     :      0.07s CPU      0.07s WALL (       8 calls)
+     om_dudk_io   :      0.00s CPU      0.00s WALL (      24 calls)
+     om_bands     :      2.40s CPU      2.48s WALL (      24 calls)
+     om_gipaw     :      0.00s CPU      0.00s WALL (      24 calls)
+     om_ik_post   :      0.00s CPU      0.00s WALL (       8 calls)
+     om_pool_sum  :      0.00s CPU      0.00s WALL (       1 calls)
