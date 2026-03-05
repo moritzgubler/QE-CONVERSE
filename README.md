@@ -1,6 +1,6 @@
 # QE-CONVERSE
 This is the official Git repository of the QE-CONVERSE code for Quantum-Espresso.  
-This current version of the code is compatible with the version 7.2 of Quantum-Espresso package.
+This current version of the code is compatible with the version 7.5 of Quantum-Espresso package.
 
 
 ## Features
@@ -25,12 +25,13 @@ run ```./qe-converse.x```
 
 ## Directory contents
 
-```/src/```: Contains the source code and the Makefile.  
-```/doc/```: Contains the User's manual.  
-```/example/```: Contains two directories:  
+```/src/```: Contains the source code and the Makefile.
+```/doc/```: Contains the User's manual.
+```/examples/```: Contains two directories:
  ```/EPR/``` about a EPR g tensor and  ```/NMR/``` about a NMR chemical shift calculation. Inside each one there's a Tutorial.wiki file that explain how to perform the calculation step-by-step.
 ```/benchmarking/``` : Contains the input files used to benchmark the code. Concerns the EPR g tensor calculation of diatomic paramagnetic radicals.
-```/application/```: Contains the EPR and NMR calculationsw.
+```/applications/```: Contains the EPR and NMR calculations.
+```/tests/```: Contains integration and unit tests.
  ## Authors and contributors
 S. Fioccola, L. Giacomazzi, D. Ceresoli, N. Richard, A. Hemeryck, L. Martin-Samos
 
