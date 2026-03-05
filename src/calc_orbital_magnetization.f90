@@ -91,16 +91,12 @@
   delta_M_dia = 0.d0
 
   ! allocate the derivatives of the projectors
-  call start_clock('om_alloc')
   call allocate_bec_type(nkb, nbnd, becp)
   allocate(dbecp(nkb,nbnd,3), paw_dbecp(paw_nkb,nbnd,3))
   allocate(vkb_save(npwx,nkb), aux(nkb,nbnd))
-  call stop_clock('om_alloc')
 #define __USE_BARRIER
 
-  call start_clock('om_setdvrs')
   CALL set_dvrs( dvrs, vrs, dfftp%nnr, nspin )
-  call stop_clock('om_setdvrs')
    ! loop over k-points
   do ik = 1, nks
     npw = ngk(ik)
@@ -110,7 +106,6 @@
     !band parallelization
     call divide(inter_bgrp_comm, occ, ibnd_start, ibnd_end)
     !
-    call start_clock('om_setup')
     ! setup the hamiltonian
     current_k = ik
     current_spin = 1
@@ -129,19 +124,15 @@
     call calbec( npw, paw_vkb, evc, paw_becp, nbnd )
     if (any(m_0 /= 0.d0))       call calc_delta_M_dia_nmr
     if (any(lambda_so /= 0.d0)) call calc_delta_M_dia_so
-    call stop_clock('om_setup')
 
-    call start_clock('om_dbecp')
     call compute_dbecp  ! for deltaM bare
     call compute_paw_dbecp ! for delta_M_para_so
-    call stop_clock('om_dbecp')
 
     ! loop over the magnetization directions
     do kk =  1, 3
       ii = ind(1,kk)
       jj = ind(2,kk)
       ! read the bra and the ket
-      call start_clock('om_dudk_io')
       if (dudk_in_memory) then
         call retrieve_dudk(dudk_bra, ik, ii, ngk(ik), nbnd)
         call retrieve_dudk(dudk_ket, ik, jj, ngk(ik), nbnd)
@@ -149,13 +140,11 @@
         call davcio(dudk_bra, 2*nwordwfc, iundudk1 + ii - 1, ik, -1)
         call davcio(dudk_ket, 2*nwordwfc, iundudk1 + jj - 1, ik, -1)
       endif
-      call stop_clock('om_dudk_io')
-      
+
       ! compute the orbital magnetization
       kp_berry(kk) = 0.d0
       kp_M_IC(kk) = 0.d0
       kp_M_LC(kk) = 0.d0
-      call start_clock('om_bands')
       do ibnd = ibnd_start, ibnd_end
        ! IC term and Berry curvature
         braket = zdotc(ngk(ik), dudk_bra(1,ibnd), 1, dudk_ket(1,ibnd), 1)
@@ -178,15 +167,11 @@
         orb_magn_LC(kk) = orb_magn_LC(kk) - wg(ibnd,ik)*imag(braket)
 
       enddo
-      call stop_clock('om_bands')
      ! compute the GIPAW corrections
-      call start_clock('om_gipaw')
       call calc_delta_M_bare
       if (any(lambda_so /= 0.d0)) call calc_delta_M_para_so
       if (any(m_0 /= 0.d0))       call calc_delta_M_para_nmr
-      call stop_clock('om_gipaw')
     enddo ! kk
-    call start_clock('om_ik_post')
     ! Parallel reductions
 #ifdef __MPI
   call mp_sum( kp_berry, intra_bgrp_comm )
@@ -202,10 +187,8 @@
       write(*,'(''LC: k-point:'',I5,2X,''pool:'',I4,4X,9F12.6)') ik, my_pool_id+1, kp_M_LC*rydtohar
       write(*,'(''IC: k-point:'',I5,2X,''pool:'',I4,4X,9F12.6)') ik, my_pool_id+1, kp_M_IC*rydtohar
     endif
-    call stop_clock('om_ik_post')
   enddo !ik
 
-  call start_clock('om_pool_sum')
 #ifdef __MPI
   call mp_sum(orb_magn_LC, intra_bgrp_comm )
   call mp_sum(orb_magn_IC, intra_bgrp_comm )
@@ -220,7 +203,6 @@
   call mp_sum(delta_M_para, inter_pool_comm )
   call mp_sum(delta_M_dia, inter_pool_comm )
 #endif
-  call stop_clock('om_pool_sum')
 
   ! close files (only if not using in-memory storage)
   if (.not. dudk_in_memory) then
