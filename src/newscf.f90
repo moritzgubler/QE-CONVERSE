@@ -35,7 +35,7 @@ SUBROUTINE newscf
   USE lsda_mod,   ONLY: nspin, current_spin
   USE orbital_magnetization, ONLY : dvrs
   USE wvfct,    ONLY : g2kin, nbndx, nbnd
-  USE gipaw_module, ONLY : conv_threshold, assume_isolated
+  USE gipaw_module, ONLY : conv_threshold, diago_thr_init, assume_isolated
   USE mp_pools,        ONLY : intra_pool_comm, inter_pool_comm
   USE ener,                 ONLY : ef, ef_up, ef_dw, ef_cond
   USE martyna_tuckerman, ONLY : do_comp_mt
@@ -107,7 +107,7 @@ SUBROUTINE newscf
   david = 6
   nbndx = max (nbndx, david*nbnd)
   isolve=0
-  ethr = conv_threshold
+  ethr = diago_thr_init
   !
   nmix=8
   niter=100
