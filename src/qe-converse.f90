@@ -108,6 +108,7 @@ if (.not. ionode .or. my_image_id > 0) goto 400
   dudk_in_memory = .false.
 
     read ( 5, input_qeconverse, iostat = ios )
+  tr2 = conv_threshold  ! keep SCF mixing threshold in sync with user-specified conv_threshold
   tmp_dir = outdir
 
   ! further checks
