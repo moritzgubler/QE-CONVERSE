@@ -231,7 +231,7 @@
   write(stdout,'(5X,''lambda_so          = '',3(F14.6))') lambda_so
   write(stdout,*)
 
-  write(stdout,'(5X,''Berry curvature    = '',3(F14.6))') berry_curvature
+  write(stdout,'(5X,''Berry curvature    = '',3(G14.6))') berry_curvature
   write(stdout,'(5X,''Fermi energy       = '',F14.6,'' rydberg'')') ef
   write(stdout,*)
 
@@ -241,23 +241,23 @@
 
   if (iverbosity > 0) then
     write(stdout,'(5X,''(without Berry curvature term)'')')
-    write(stdout,'(5X,''M_LC               = '',3(F14.6))') orb_magn_LC
-    write(stdout,'(5X,''M_IC               = '',3(F14.6))') orb_magn_IC
-    write(stdout,'(5X,''Delta_M_bare       = '',3(F14.6))') delta_M_bare
-    write(stdout,'(5X,''Delta_M_para       = '',3(F14.6))') delta_M_para
-    write(stdout,'(5X,''Delta_M_dia        = '',3(F14.6))') delta_M_dia
-    write(stdout,'(5X,''M_tot              = '',3(F14.6))') orb_magn_tot
+    write(stdout,'(5X,''M_LC               = '',3(G14.6))') orb_magn_LC
+    write(stdout,'(5X,''M_IC               = '',3(G14.6))') orb_magn_IC
+    write(stdout,'(5X,''Delta_M_bare       = '',3(G14.6))') delta_M_bare
+    write(stdout,'(5X,''Delta_M_para       = '',3(G14.6))') delta_M_para
+    write(stdout,'(5X,''Delta_M_dia        = '',3(G14.6))') delta_M_dia
+    write(stdout,'(5X,''M_tot              = '',3(G14.6))') orb_magn_tot
     write(stdout,*)
     write(stdout,'(5X,''(with Berry curvature term)'')')
    endif
   orb_magn_LC = orb_magn_LC - ef*berry_curvature
   orb_magn_IC = orb_magn_IC - ef*berry_curvature
   orb_magn_tot = orb_magn_tot - 2.d0*ef*berry_curvature
-  write(stdout,'(5X,''M_LC               = '',3(F14.6))') orb_magn_LC
-  write(stdout,'(5X,''M_IC               = '',3(F14.6))') orb_magn_IC
-  write(stdout,'(5X,''Delta_M            = '',3(F14.6))') &
+  write(stdout,'(5X,''M_LC               = '',3(G14.6))') orb_magn_LC
+  write(stdout,'(5X,''M_IC               = '',3(G14.6))') orb_magn_IC
+  write(stdout,'(5X,''Delta_M            = '',3(G14.6))') &
         delta_M_bare + delta_M_para + delta_M_dia
-  write(stdout,'(5X,''M_tot              = '',3(F14.6))') orb_magn_tot
+  write(stdout,'(5X,''M_tot              = '',3(G14.6))') orb_magn_tot
 
   ! free memory
   CALL deallocate_bec_type ( becp )

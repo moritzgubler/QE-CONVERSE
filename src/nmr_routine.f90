@@ -363,7 +363,7 @@ USE wvfct,                ONLY : current_k
   write(stdout,'(5X,''NUCLEAR DIPOLE ON ATOM'',I4,'' ('',A3,''):'')') &
          m_0_atom, atm(ityp(m_0_atom))
   write(stdout,'(5X,''m_0                = '',3(F14.6))') m_0
-  write(stdout,'(5X,''Chemical shift (ppm):'',3(F14.4))') chemical_shift/2.d0
+  write(stdout,'(5X,''Chemical shift (ppm):'',3(G14.6))') chemical_shift/2.d0
   write(stdout,'(5X,''Core shift     (ppm):'',F14.4)') &
         nmr_shift_core(ityp(m_0_atom))
   END SUBROUTINE calc_chemical_shift
