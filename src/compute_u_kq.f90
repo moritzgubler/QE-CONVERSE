@@ -132,8 +132,8 @@ SUBROUTINE compute_u_kq(ik, q)
   ! read in wavefunctions from the previous iteration
   CALL get_buffer( evc, nwordwfc, iunwfc, ik)
 
-  ! Needed for LDA+U
-!  IF ( lda_plus_u ) CALL get_buffer( wfcU, nwordwfcU, iunhub, ik )
+  ! Needed for LDA+U: load wfcU at k (k-approximation for k+q; error O(q^2) in du/dk)
+  IF ( lda_plus_u ) CALL get_buffer( wfcU, nwordwfcU, iunhub, ik )
 
   ! randomize a little bit in case of CG diagonalization
 !  if ( isolve == 1 ) then

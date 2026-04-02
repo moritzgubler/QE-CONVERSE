@@ -21,7 +21,8 @@ SUBROUTINE newscf
   USE check_stop,    ONLY : check_stop_init
   USE fft_base,      ONLY : dfftp, dffts
   USE symm_base,     ONLY : nsym
-  USE io_files,      ONLY : iunwfc, prefix, tmp_dir, postfix
+  USE io_files,      ONLY : iunwfc, iunhub, prefix, tmp_dir, postfix
+  USE buffers,       ONLY : close_buffer
   USE ldaU,          ONLY : lda_plus_u
   USE control_flags, ONLY : restart, io_level, lscf, iprint, &
                             david, max_cg_iter, nexxiter, &
@@ -113,7 +114,7 @@ SUBROUTINE newscf
   niter=100
   nexxiter=100
   !
-  !call openfil !DFT+U(V) implementation
+  if ( lda_plus_u ) call openfil  ! sets nwordwfcU and opens iunhub for DFT+U
   call summary ( )
   call hinit0 ( )
   call potinit ( )
@@ -145,6 +146,7 @@ SUBROUTINE newscf
   ENDIF
   !
   CLOSE(unit=iunwfc, status='keep')
+  if ( lda_plus_u ) call close_buffer(iunhub, 'DELETE')
   !
   !
   RETURN
