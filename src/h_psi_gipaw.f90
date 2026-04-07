@@ -136,6 +136,7 @@ SUBROUTINE h_psi_gipaw_ ( lda, n, m, psi, hpsi )
        USE wvfct,    ONLY : g2kin, nbndx, nbnd
        USE nmr_mod
        USE ldaU,                 ONLY: lda_plus_u, Hubbard_projectors
+       USE noncollin_module,     ONLY: noncolin
 
        !
        IMPLICIT NONE
@@ -178,20 +179,15 @@ SUBROUTINE h_psi_gipaw_ ( lda, n, m, psi, hpsi )
           call add_nmr_Fnl (lda, n, m, psi, hpsi)
   endif
 
-  ! ... Here we add the Hubbard potential times psi
+  ! Add the Hubbard potential times psi
   !
-  IF ( lda_plus_u .AND. Hubbard_projectors.NE."pseudo" ) THEN
-     !
-     !IF ( noncolin ) THEN
-     !   CALL vhpsi_nc( lda, n, m, psi, hpsi )
-     !ELSE
-        CALL vhpsi( lda, n, m, psi, hpsi )
-     !ENDIF
-     !
+  IF ( lda_plus_u .AND. Hubbard_projectors /= 'pseudo' ) THEN
+     IF ( noncolin ) CALL errore( 'h_psi_gipaw', 'DFT+U with noncolin not implemented', 1 )
+     CALL vhpsi( lda, n, m, psi, hpsi )
   ENDIF
 
   RETURN
-       
+
 END SUBROUTINE h_psi_k     
      !
 !-----------------------------------------------------------------------
@@ -555,6 +551,7 @@ END SUBROUTINE vloc_psi_k_gipaw
        USE cell_base,            ONLY : tpiba2
        USE nmr_mod
        USE ldaU,                 ONLY: lda_plus_u, Hubbard_projectors
+       USE noncollin_module,     ONLY: noncolin
        !
        IMPLICIT NONE
        !
@@ -611,14 +608,9 @@ END SUBROUTINE vloc_psi_k_gipaw
 
         ! ... Here we add the Hubbard potential times psi
         !
-        IF ( lda_plus_u .AND. Hubbard_projectors.NE."pseudo" ) THEN
-           !
-           !IF ( noncolin ) THEN
-           !   CALL vhpsi_nc( lda, n, m, psi, hpsi )
-           !ELSE
-              CALL vhpsi( lda, n, m, psi, hpsi )
-           !ENDIF
-           !
+        IF ( lda_plus_u .AND. Hubbard_projectors /= 'pseudo' ) THEN
+           IF ( noncolin ) CALL errore( 'h_psi_gipaw', 'DFT+U with noncolin not implemented', 1 )
+           CALL vhpsi( lda, n, m, psi, hpsi )
         ENDIF
         !
         RETURN
