@@ -58,6 +58,10 @@ SUBROUTINE wfcinit_gipaw()
   IF ( lda_plus_u .AND. Hubbard_projectors.NE.'pseudo' ) THEN
      IF (.NOT. ALLOCATED(wfcU)) ALLOCATE( wfcU(npwx*npol, nwfcU) )
      CALL orthoUwfc(.FALSE.)
+     ! orthoUwfc only saves wfcU to iunhub when nks > 1 (keeps it in memory otherwise).
+     ! compute_u_kq overwrites wfcU at k+q and restores via get_buffer, so the buffer
+     ! slot must be populated even when nks == 1.
+     IF ( nks == 1 ) CALL save_buffer( wfcU, nwordwfcU, iunhub, 1 )
   END IF
   !
   ! ... open files/buffer for wavefunctions (nwordwfc set in openfil)
