@@ -20,14 +20,15 @@ SUBROUTINE wfcinit_gipaw()
   USE klist,                ONLY : xk, nks, ngk, igk_k
   USE control_flags,        ONLY : io_level, lscf
   USE fixed_occ,            ONLY : one_atom_occupations
-  USE ldaU,                 ONLY : lda_plus_u, Hubbard_projectors, wfcU, lda_plus_u_kind
+  USE ldaU,                 ONLY : lda_plus_u, Hubbard_projectors, wfcU, lda_plus_u_kind, nwfcU
   USE lsda_mod,             ONLY : lsda, current_spin, isk
   USE io_files,             ONLY : nwordwfc, nwordwfcU, iunhub, iunwfc,&
                                    diropn, xmlfile, restart_dir
   USE buffers,              ONLY : open_buffer, close_buffer, get_buffer, save_buffer
   USE uspp,                 ONLY : nkb, vkb
   USE wavefunctions,        ONLY : evc
-  USE wvfct,                ONLY : nbnd, current_k
+  USE wvfct,                ONLY : nbnd, current_k, npwx
+  USE noncollin_module,     ONLY : npol
   USE wannier_new,          ONLY : use_wannier
   USE pw_restart_new,       ONLY : read_collected_wfc
   USE mp,                   ONLY : mp_bcast, mp_sum
@@ -54,7 +55,10 @@ SUBROUTINE wfcinit_gipaw()
   IF ( (use_wannier .OR. one_atom_occupations ) .AND. lda_plus_u ) &
        CALL errore ( 'wfcinit', 'currently incompatible options', 1 )
   IF ( use_wannier .OR. one_atom_occupations ) CALL orthoatwfc ( use_wannier )
-  IF ( lda_plus_u ) CALL orthoUwfc(.FALSE.)
+  IF ( lda_plus_u .AND. Hubbard_projectors.NE.'pseudo' ) THEN
+     IF (.NOT. ALLOCATED(wfcU)) ALLOCATE( wfcU(npwx*npol, nwfcU) )
+     CALL orthoUwfc(.FALSE.)
+  END IF
   !
   ! ... open files/buffer for wavefunctions (nwordwfc set in openfil)
   ! ... io_level > 1 : open file, otherwise: open buffer

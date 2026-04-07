@@ -20,7 +20,7 @@ SUBROUTINE newscf
   USE noncollin_module, ONLY: report
   USE check_stop,    ONLY : check_stop_init
   USE fft_base,      ONLY : dfftp, dffts
-  USE symm_base,     ONLY : nsym
+  USE symm_base,     ONLY : nsym, d1, d2, d3
   USE io_files,      ONLY : iunwfc, iunhub, prefix, tmp_dir, postfix
   USE buffers,       ONLY : close_buffer
   USE ldaU,          ONLY : lda_plus_u
@@ -61,7 +61,7 @@ SUBROUTINE newscf
   restart  =.false.
   io_level = 0
   lscf=.true.
-  lda_plus_u=.false.
+
   doublegrid=.false.
   lmovecell=.false.
   iprint=10000
@@ -102,6 +102,9 @@ SUBROUTINE newscf
   !
   nsym=1
   noinv=.true.
+  ! d_matrix initializes the D-matrices (d1,d2,d3) used by new_ns for symmetrization.
+  ! read_file only calls d_matrix for PAW; for norm-conserving we must call it here.
+  if ( lda_plus_u ) call d_matrix(d1, d2, d3)
   !
   ! these must be tuned for fast convergence
   !
@@ -146,7 +149,8 @@ SUBROUTINE newscf
   ENDIF
   !
   CLOSE(unit=iunwfc, status='keep')
-  if ( lda_plus_u ) call close_buffer(iunhub, 'DELETE')
+  ! Keep iunhub open: compute_u_kq needs wfcU during calc_orbital_magnetization.
+  ! It is closed (and deleted) after calc_orbital_magnetization in qe-converse.f90.
   !
   !
   RETURN
