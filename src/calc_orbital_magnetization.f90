@@ -20,8 +20,7 @@
   USE gipaw_module,          ONLY : lambda_so, dudk_method
   USE paw_gipaw,             ONLY : paw_vkb, paw_nkb, paw_becp
   USE ener,                  ONLY : ef
-  USE ldaU,                 ONLY : lda_plus_u, wfcU, Hubbard_projectors
-  USE io_files,             ONLY : nwordwfcU, iunhub
+!  USE ldaU,                 ONLY : swfcatom, lda_plus_u
   USE buffers,               ONLY : get_buffer
   USE scf,                   ONLY : vrs
   USE mp_global,             ONLY : my_pool_id
@@ -114,8 +113,6 @@
      CALL gk_sort( xk(1,ik), ngm, g, gcutw, ngk(ik), igk_k(1,ik), g2kin )
      g2kin(1:ngk(ik)) = g2kin(1:ngk(ik)) * tpiba2
     call get_buffer(evc, nwordwfc, iunwfc, ik)
-    if (lda_plus_u .AND. Hubbard_projectors /= 'pseudo') &
-       call get_buffer(wfcU, nwordwfcU, iunhub, ik)
     if (nkb > 0) then
       call init_us_2(ngk(ik), igk_k(1,ik), xk(1,ik), vkb)
       CALL calbec( npw, vkb, evc, becp, nbnd )
