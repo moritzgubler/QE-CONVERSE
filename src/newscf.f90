@@ -20,9 +20,8 @@ SUBROUTINE newscf
   USE noncollin_module, ONLY: report
   USE check_stop,    ONLY : check_stop_init
   USE fft_base,      ONLY : dfftp, dffts
-  USE symm_base,     ONLY : nsym, d1, d2, d3
-  USE io_files,      ONLY : iunwfc, iunhub, prefix, tmp_dir, postfix
-  USE buffers,       ONLY : close_buffer
+  USE symm_base,     ONLY : nsym
+  USE io_files,      ONLY : iunwfc, prefix, tmp_dir, postfix
   USE ldaU,          ONLY : lda_plus_u
   USE control_flags, ONLY : restart, io_level, lscf, iprint, &
                             david, max_cg_iter, nexxiter, &
@@ -61,7 +60,7 @@ SUBROUTINE newscf
   restart  =.false.
   io_level = 0
   lscf=.true.
-
+  lda_plus_u=.false.
   doublegrid=.false.
   lmovecell=.false.
   iprint=10000
@@ -102,9 +101,6 @@ SUBROUTINE newscf
   !
   nsym=1
   noinv=.true.
-  ! d_matrix initializes the D-matrices (d1,d2,d3) used by new_ns for symmetrization.
-  ! read_file only calls d_matrix for PAW; for norm-conserving we must call it here.
-  if ( lda_plus_u ) call d_matrix(d1, d2, d3)
   !
   ! these must be tuned for fast convergence
   !
@@ -117,7 +113,7 @@ SUBROUTINE newscf
   niter=100
   nexxiter=100
   !
-  if ( lda_plus_u ) call openfil  ! sets nwordwfcU and opens iunhub for DFT+U
+  !call openfil !DFT+U(V) implementation
   call summary ( )
   call hinit0 ( )
   call potinit ( )
@@ -149,8 +145,6 @@ SUBROUTINE newscf
   ENDIF
   !
   CLOSE(unit=iunwfc, status='keep')
-  ! Keep iunhub open: compute_u_kq needs wfcU during calc_orbital_magnetization.
-  ! It is closed (and deleted) after calc_orbital_magnetization in qe-converse.f90.
   !
   !
   RETURN
