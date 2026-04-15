@@ -48,5 +48,5 @@ ATOMIC_POSITIONS angstrom
 K_POINTS automatic
   3 3 1 0 0 0
 
-HUBBARD (ortho-atomic)
+HUBBARD (atomic)
   U Co-3d  8.0
