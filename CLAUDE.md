@@ -37,7 +37,7 @@ and eigenvectors, `ε_F` the Fermi level, and `α = 1/c` the fine-structure cons
 
 ### Total Orbital Magnetization (GIPAW decomposition)
 
-The full orbital magnetization splits into four terms:
+The full orbital magnetization splits into five terms:
 
 | Term | Meaning |
 |------|---------|
@@ -45,8 +45,58 @@ The full orbital magnetization splits into four terms:
 | `ΔM_NL` | Non-local pseudopotential correction |
 | `ΔM_para` | Paramagnetic GIPAW correction (uses `F_R^NL` for EPR, `K_R^NL` for NMR) |
 | `ΔM_dia` | Diamagnetic GIPAW correction (uses `E_R^NL` for EPR, `J_R^NL` for NMR) |
+| `ΔM_Hub` | Hubbard U correction (active when `lda_plus_u=.true.` and `lhub_magnetization=.true.`) |
 
-The output keywords `M_LC`, `M_IC`, and `Delta_M` correspond to these terms.
+`M_total = M_LC + M_IC + ΔM_NL + ΔM_para + ΔM_dia + ΔM_Hub`. The output keyword `Delta_M`
+groups `ΔM_NL + ΔM_para + ΔM_dia + ΔM_Hub`; `Delta_M_hubbard` is printed separately.
+
+### Hubbard U Contribution to Orbital Magnetization (DFT+U)
+
+The Hubbard potential on site `I` is separable:
+
+```
+V_I^Hub = Σ_{mm'} |φ_{Im}^k> V_{mm'}^I <φ_{Im'}^k|
+```
+
+where `V_{mm'}^I = U^I [δ_{mm'}/2 - n_{mm'}^{I,σ}]` is the Hubbard potential matrix
+(stored as `v%ns(m,m',σ,na)` in QE) and `φ_{Im}` are the Hubbard projector orbitals
+(atomic or orthogonalized atomic; `pseudo`-type is excluded).
+
+Starting from the same GIPAW commutator expression as for the bare non-local term, one
+arrives at an identical structure with KB projectors replaced by Hubbard projectors:
+
+```
+ΔM_Hub,γ = -(α/2) Σ_{n,k} f_{nk} Σ_I Σ_{mm'} Σ_{μν} ε_{γμν}
+              Im[ <u_{nk}|∂_{k_μ} φ̃_{Im}^k> V_{mm'}^I <∂_{k_ν} φ̃_{Im'}^k|u_{nk}> ]
+```
+
+**No-phase convention for Hubbard projectors.** The tilde `φ̃` denotes the no-phase
+projector, defined by stripping the global atomic-center phase `e^{-ik·R_I}` from the
+full-phase projector produced by `orthoUwfc_k`. In reciprocal space:
+
+```
+φ̃^{k,I}_m(G) = e^{-iG·R_I} φ_m(k+G)        (no e^{-ik·R_I} factor)
+```
+
+This ensures that `∂_{k_μ} φ̃^{k,I}_m = -i(r_μ - R_{I,μ}) φ̃^{k,I}_m`, i.e., the
+derivative generates the relative position operator from the atomic center, not the
+absolute position. Without stripping the phase, the derivative would produce a spurious
+term proportional to `R_{I,μ}`.
+
+**Implementation in `calc_orbital_magnetization.f90`:**
+- `compute_dhubbecp` — computes `dhubbecp(m,n,ipol) = d/dk_ipol <φ̃_{Im}^k | u_{nk}>`
+  via central finite differences. Calls `orthoUwfc_k` at `k±δk`, then multiplies by the
+  phase `e^{+i(k±δk)·R_I}` to strip the Bloch center phase, then calls `ZGEMM` to
+  form the overlap with `evc`.
+- `calc_delta_M_hub` — evaluates the double sum over `m,m'` and bands, contracting
+  `conjg(dhubbecp(m,n,ii)) * dhubbecp(m',n,jj)` with `v%ns`, and accumulates
+  `delta_M_hub(kk) -= 2·Im(tmp)` (same sign convention as `delta_M_bare`).
+
+**Supported Hubbard projector types:** `atomic` and `ortho-atomic`. The `pseudo` type
+is explicitly excluded (Kleinman-Bylander projectors already enter via `ΔM_NL`).
+
+**DFT+U+V (inter-site interactions):** **not yet implemented**. The current code handles
+on-site `U` only.
 
 ### EPR g-tensor
 
@@ -125,10 +175,12 @@ qe-converse.x
   │    └─ electrons_gipaw    SCF loop (Davidson diagonalisation)
   │         └─ c_bands_gipaw diagonalise H(k) for each k-point
   └─ calc_orbital_magnetization
-       ├─ compute_dudk_new   covariant du/dk via finite differences
-       │    └─ compute_u_kq  diagonalise H(k+q) for each k and q=±q_gipaw·x̂,ŷ,ẑ
-       └─ calc_delta_M_bare  bare orbital magnetization (Berry curvature integral)
-            + GIPAW correction terms (ΔM_NL, ΔM_para, ΔM_dia)
+       ├─ compute_dudk_new    covariant du/dk via finite differences
+       │    └─ compute_u_kq   diagonalise H(k+q) for each k and q=±q_gipaw·x̂,ŷ,ẑ
+       ├─ calc_delta_M_bare   bare orbital magnetization (Berry curvature integral)
+       │    + GIPAW correction terms (ΔM_NL, ΔM_para, ΔM_dia)
+       ├─ compute_dhubbecp    k-derivative of no-phase Hubbard projectors (if DFT+U)
+       └─ calc_delta_M_hub    Hubbard U correction to orbital magnetization (if DFT+U)
 ```
 
 ### Covariant Finite Difference for du/dk
@@ -172,9 +224,9 @@ communicator. This improves scalability for large supercell calculations.
 | `compute_dudk_new.f90` | Computes covariant du/dk: calls `compute_u_kq` for each displaced k±q, builds overlap matrix, inverts, assembles dual states, saves result. Supports in-memory (`dudk_storage`) or disk I/O. After calling `compute_u_kq(ik,0)`, saves `evc` back to `iunwfc`. Forces in-memory storage when `nproc_pool > 1` (disk I/O is not safe with distributed G-vectors). |
 | `compute_u_kq.f90` | Diagonalises H(k+q). Reads `evc` from `iunwfc` as initial guess (line 133); after diagonalisation, restores `evc` from `iunwfc` (lines 193-196) to not corrupt the k-point buffer. |
 | `dudk_storage.f90` | Module providing in-memory buffer management for du/dk matrices; allocates/deallocates storage and handles retrieval for better performance than disk I/O. |
-| `calc_orbital_magnetization.f90` | Computes all orbital magnetization terms: LC, IC (Berry curvature formula), and GIPAW corrections (`delta_M_bare`, `delta_M_para`, `delta_M_dia`) for both EPR and NMR modes. Contains band-group MPI parallelisation over `ibnd`. |
-| `orbital_magnetization.f90` | Module storing orbital magnetization results (`M_LC`, `M_IC`, `Delta_M`, total) and physical constants (α, g_e = 2.002319, a2gp8). |
-| `gipaw_module.f90` | Global GIPAW parameters: q-vector (`q_gipaw`), convergence thresholds, SO coupling strengths (`lambda_so`), radial integrals, L-operators, projector data. |
+| `calc_orbital_magnetization.f90` | Computes all orbital magnetization terms: LC, IC (Berry curvature formula), and GIPAW corrections (`delta_M_bare`, `delta_M_para`, `delta_M_dia`, `delta_M_hub`) for both EPR and NMR modes. Contains internal subroutines `compute_dhubbecp` and `calc_delta_M_hub` for the DFT+U contribution. Contains band-group MPI parallelisation over `ibnd`. |
+| `orbital_magnetization.f90` | Module storing orbital magnetization results (`M_LC`, `M_IC`, `Delta_M`, `delta_M_hub`, total) and physical constants (α, g_e = 2.002319, a2gp8). |
+| `gipaw_module.f90` | Global GIPAW parameters: q-vector (`q_gipaw`), convergence thresholds, SO coupling strengths (`lambda_so`), radial integrals, L-operators, projector data. Also holds `lhub_magnetization` flag. |
 | `gipaw_setup.f90` | Initialises GIPAW infrastructure: reads UPF pseudopotential data, sets up radial integrals for NMR/EPR (`f_Rnm`, `e_Rnm`, `k_Rnm`, `j_Rnm`), L-operator matrices, spline interpolations. |
 | `init_gipaw_1.f90` | Constructs GIPAW projectors `ρ̃_{R,n}` from UPF data; computes projection coefficients and orthogonalisation matrices. |
 | `init_gipaw_2.f90` | Computes GIPAW projector coefficients in reciprocal space with structure factors, phase factors, and spherical harmonics. |
@@ -233,6 +285,7 @@ tests/
     nacl_nmr/                   serial NMR chemical shift test (NaCl)
     nacl_nmr_kpool/             parallel NMR chemical shift test (NaCl, npool=4, 8 MPI ranks)
     quartz/                     serial NMR chemical shift test (quartz Si, O)
+    licoo2_U/                   parallel DFT+U NMR test (LiCoO₂, npool=9, 9 MPI ranks; checks Li and Co shieldings)
     <test>/
       run.sh                    runs pw.x SCF + qe-converse.x, then calls check script
       reference/                stored reference output files (generated with serial run.sh)
@@ -323,6 +376,7 @@ The single input namelist is `&input_qeconverse`. Key parameters:
 | `lambda_so(1..3)` | real | 0.0 | Spin-orbit coupling direction for EPR. Set one component ≠ 0 per run. |
 | `m_0(1..3)` | real | 0.0 | Nuclear dipole moment direction for NMR. Set one component ≠ 0 per run. |
 | `m_0_atom` | int | 0 | Index of the atom carrying the NMR dipole. |
+| `lhub_magnetization` | logical | `.true.` | Compute DFT+U Hubbard contribution to orbital magnetization. Only active when `lda_plus_u=.true.` in the SCF and projector type is not `pseudo`. |
 
 EPR example:
 ```fortran
@@ -352,8 +406,9 @@ NMR example:
 |---------|-------------|
 | `M_LC` | Local Circulation orbital magnetization (a.u.) |
 | `M_IC` | Itinerant Circulation orbital magnetization (a.u.) |
-| `Delta_M` | Non-local + paramagnetic + diamagnetic GIPAW correction (a.u.) |
-| `M_total` | Sum of `M_LC + M_IC + Delta_M` |
+| `Delta_M` | Sum of non-local, paramagnetic, diamagnetic, and Hubbard GIPAW corrections (a.u.) |
+| `Delta_M_hubbard` | Hubbard U contribution to `Delta_M` (a.u.), printed separately for diagnostics |
+| `M_total` | Sum of `M_LC + M_IC + Delta_M` (includes Hubbard if active) |
 | `delta_g RMC` | Relativistic mass correction to Δg (ppm) |
 | `delta_g RMC (GIPAW)` | GIPAW correction to `delta_g RMC` (ppm) |
 | `delta_g SO` | SO coupling contribution to Δg (ppm) |
