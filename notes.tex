@@ -1,0 +1,1467 @@
+
+\documentclass[11pt]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb,amsfonts,bm,mathtools}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{hyperref}
+\newcommand{\kk}{k}
+
+\newcommand{\bra}[1] { \langle #1 | }
+\newcommand{\ket}[1] { | #1 \rangle }
+\newcommand{\braket}[2] { \langle #1 | #2 \rangle }
+
+\title{Detailed Derivation of the Hubbard Contribution to $\Delta \mathbf{M}$\\
+and Its Analogy with $\Delta \mathbf{M}_{\mathrm{bare}}$}
+\author{}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section{Goal}
+
+The purpose of this note is to derive step by step the contribution to the orbital magnetization associated with a Hubbard potential, starting from the same GIPAW-like expression used for the bare non-local contribution. The goal is to show that the final Hubbard term has exactly the same structure as $\Delta \mathbf{M}_{\mathrm{bare}}$, upon replacing non-local pseudopotential projectors with Hubbard projectors.
+
+Throughout the derivation we assume the norm-conserving case, so that the overlap operator is the identity:
+\begin{equation}
+S = \mathbb{I}.
+\end{equation}
+Therefore no ultrasoft overlap corrections appear.
+
+\section{Starting point}
+
+We start from the standard bare contribution written in operator form:
+\begin{equation}
+\Delta \mathbf{M}
+=
+\frac{\alpha}{2}
+\sum_I
+\left\langle
+(\mathbf{R}_I-\mathbf{r}) \times \frac{1}{i}
+\left[
+\mathbf{R}_I-\mathbf{r},\hat V_I
+\right]
+\right\rangle .
+\label{eq:start}
+\end{equation}
+
+Here:
+\begin{itemize}
+\item $I$ labels the atomic site,
+\item $\mathbf{R}_I$ is the position of site $I$,
+\item $\hat V_I$ is an operator localized on site $I$.
+\end{itemize}
+
+For convenience, define
+\begin{equation}
+\bm{\rho}_I = \mathbf{r}-\mathbf{R}_I.
+\label{eq:rho_def}
+\end{equation}
+Then
+\begin{equation}
+\mathbf{R}_I-\mathbf{r} = -\bm{\rho}_I,
+\end{equation}
+and
+\begin{equation}
+\left[
+\mathbf{R}_I-\mathbf{r},\hat V_I
+\right]
+=
+\left[
+-\bm{\rho}_I,\hat V_I
+\right]
+=
+-\left[
+\bm{\rho}_I,\hat V_I
+\right].
+\end{equation}
+Therefore Eq.~\eqref{eq:start} becomes
+\begin{equation}
+\Delta \mathbf{M}
+=
+\frac{\alpha}{2}
+\sum_I
+\left\langle
+\bm{\rho}_I \times \frac{1}{i}
+\left[
+\bm{\rho}_I,\hat V_I
+\right]
+\right\rangle .
+\label{eq:start_rho}
+\end{equation}
+
+\section{Expansion of the commutator}
+
+We expand the commutator:
+\begin{equation}
+\left[
+\bm{\rho}_I,\hat V_I
+\right]
+=
+\bm{\rho}_I \hat V_I - \hat V_I \bm{\rho}_I .
+\end{equation}
+Substituting into Eq.~\eqref{eq:start_rho}, we obtain
+\begin{equation}
+\Delta \mathbf{M}
+=
+\frac{\alpha}{2}
+\sum_I
+\left\langle
+\bm{\rho}_I \times \frac{1}{i}
+\left(
+\bm{\rho}_I \hat V_I - \hat V_I \bm{\rho}_I
+\right)
+\right\rangle .
+\label{eq:expand_comm}
+\end{equation}
+
+Using linearity of the cross product,
+\begin{equation}
+\bm{\rho}_I \times
+\left(
+\bm{\rho}_I \hat V_I - \hat V_I \bm{\rho}_I
+\right)
+=
+\bm{\rho}_I \times (\bm{\rho}_I \hat V_I)
+-
+\bm{\rho}_I \times (\hat V_I \bm{\rho}_I) .
+\label{eq:cross_split}
+\end{equation}
+
+Let us analyze the first term. In components,
+\begin{equation}
+\left[\bm{\rho}_I \times (\bm{\rho}_I \hat V_I)\right]_\gamma
+=
+\sum_{\mu\nu}
+\epsilon_{\gamma\mu\nu}
+\,\rho_{I,\mu}\rho_{I,\nu}\hat V_I .
+\end{equation}
+Since $\rho_{I,\mu}\rho_{I,\nu}$ is symmetric under $\mu \leftrightarrow \nu$, while $\epsilon_{\gamma\mu\nu}$ is antisymmetric, this term vanishes:
+\begin{equation}
+\bm{\rho}_I \times (\bm{\rho}_I \hat V_I)=0 .
+\end{equation}
+Therefore,
+\begin{equation}
+\bm{\rho}_I \times
+\left(
+\bm{\rho}_I \hat V_I - \hat V_I \bm{\rho}_I
+\right)
+=
+-
+\bm{\rho}_I \times (\hat V_I \bm{\rho}_I) .
+\end{equation}
+
+Hence Eq.~\eqref{eq:expand_comm} becomes
+\begin{equation}
+\Delta \mathbf{M}
+=
+-\frac{\alpha}{2}
+\sum_I
+\left\langle
+\bm{\rho}_I \times \frac{1}{i}\hat V_I \bm{\rho}_I
+\right\rangle .
+\label{eq:generic_form}
+\end{equation}
+
+Equivalently, since $1/i=-i$,
+\begin{equation}
+\Delta \mathbf{M}
+=
+\frac{i\alpha}{2}
+\sum_I
+\left\langle
+\bm{\rho}_I \times \hat V_I \bm{\rho}_I
+\right\rangle .
+\label{eq:generic_form_i}
+\end{equation}
+
+
+\section{Recovery of the bare non-local formula}
+
+Consider first a separable non-local pseudopotential:
+\begin{equation}
+\hat V_I^{\mathrm{NL}}
+=
+\sum_{ij}
+|\beta_i^I\rangle D_{ij}^I \langle \beta_j^I| .
+\label{eq:vnl_sep}
+\end{equation}
+
+Substituting Eq.~\eqref{eq:vnl_sep} into Eq.~\eqref{eq:generic_form}, we obtain
+\begin{equation}
+\Delta \mathbf{M}_{\mathrm{bare}}
+=
+-\frac{\alpha}{2}
+\sum_I
+\left\langle
+\bm{\rho}_I \times \frac{1}{i}
+\sum_{ij}
+|\beta_i^I\rangle D_{ij}^I \langle \beta_j^I|
+\bm{\rho}_I
+\right\rangle .
+\end{equation}
+By linearity,
+\begin{equation}
+\Delta \mathbf{M}_{\mathrm{bare}}
+=
+-\frac{\alpha}{2}
+\sum_I \sum_{ij}
+\left\langle
+\bm{\rho}_I \times \frac{1}{i}
+|\beta_i^I\rangle D_{ij}^I \langle \beta_j^I|
+\bm{\rho}_I
+\right\rangle .
+\end{equation}
+
+Evaluating the expectation value over occupied Bloch states gives
+\begin{equation}
+\Delta \mathbf{M}_{\mathrm{bare}}
+=
+-\frac{\alpha}{2}
+\sum_{n\mathbf{k}}^{\mathrm{occ}} f_{n\mathbf{k}}
+\sum_I \sum_{ij}
+\left\langle u_{n\mathbf{k}} \left|
+\bm{\rho}_I \times \frac{1}{i}
+|\beta_i^{\mathbf{k},I}\rangle D_{ij}^I
+\langle \beta_j^{\mathbf{k},I}|
+\bm{\rho}_I
+\right| u_{n\mathbf{k}} \right\rangle .
+\label{eq:bare_exp}
+\end{equation}
+
+Using
+\begin{equation}
+(\mathbf{A}\times\mathbf{B})_\gamma
+=
+\sum_{\mu\nu}
+\epsilon_{\gamma\mu\nu} A_\mu B_\nu ,
+\label{eq:cross_components}
+\end{equation}
+we obtain
+\begin{equation}
+\Delta M_{\mathrm{bare},\gamma}
+=
+-\frac{\alpha}{2}
+\sum_{n\mathbf{k}}^{\mathrm{occ}} f_{n\mathbf{k}}
+\sum_I \sum_{ij} \sum_{\mu\nu}
+\epsilon_{\gamma\mu\nu}
+\frac{1}{i}
+\langle u_{n\mathbf{k}} | \rho_{I,\mu} | \beta_i^{\mathbf{k},I} \rangle
+D_{ij}^I
+\langle \beta_j^{\mathbf{k},I} | \rho_{I,\nu} | u_{n\mathbf{k}} \rangle .
+\label{eq:bare_components}
+\end{equation}
+
+More precisely, for a projector localized on atom $I$, we use the
+no-phase KB projector, i.e. the projector in which the global
+$e^{-i\mathbf{k}\cdot\mathbf{R}_I}$ phase associated with the atomic
+center has been removed. This convention is discussed in
+Appendix~\ref{app:kb_no_phase}. With this choice, the dependence on the
+local coordinate
+\begin{equation}
+\boldsymbol{\rho}_I = \mathbf r-\mathbf R_I
+\end{equation}
+is made explicit by writing
+\begin{equation}
+\widetilde{\beta}_i^{\mathbf{k},I}(\mathbf{r})
+=
+e^{-i\mathbf{k}\cdot(\mathbf{r}-\mathbf{R}_I)}
+\beta_i^{I}(\mathbf{r}),
+\end{equation}
+where $\beta_i^{I}(\mathbf r)$ denotes the localized projector already
+centered on atom $I$.
+
+It follows that
+\begin{equation}
+\partial_{k_\mu}\widetilde{\beta}_i^{\mathbf{k},I}(\mathbf{r})
+=
+-i (r_\mu-R_{I,\mu})
+\widetilde{\beta}_i^{\mathbf{k},I}(\mathbf{r})
+=
+-i \rho_{I,\mu}
+\widetilde{\beta}_i^{\mathbf{k},I}(\mathbf{r}).
+\end{equation}
+Hence,
+\begin{equation}
+\rho_{I,\mu}\widetilde{\beta}_i^{\mathbf{k},I}
+=
+i\,\partial_{k_\mu}\widetilde{\beta}_i^{\mathbf{k},I}.
+\label{eq:rho_beta_ket}
+\end{equation}
+This gives
+\begin{equation}
+\langle u_{n\mathbf{k}} | \rho_{I,\mu} |
+\widetilde{\beta}_i^{\mathbf{k},I} \rangle
+=
+i \,
+\langle u_{n\mathbf{k}} |
+\partial_{k_\mu} \widetilde{\beta}_i^{\mathbf{k},I} \rangle ,
+\label{eq:rho_beta_left}
+\end{equation}
+and, by Hermitian conjugation,
+\begin{equation}
+\langle \widetilde{\beta}_j^{\mathbf{k},I} |
+\rho_{I,\nu} | u_{n\mathbf{k}} \rangle
+=
+- i \,
+\langle
+\partial_{k_\nu} \widetilde{\beta}_j^{\mathbf{k},I}
+| u_{n\mathbf{k}} \rangle .
+\label{eq:rho_beta_right}
+\end{equation}
+
+
+
+Substituting into Eq.~\eqref{eq:bare_components},
+\begin{align}
+\Delta M_{\mathrm{bare},\gamma}
+&=
+-\frac{\alpha}{2}
+\sum_{n\mathbf{k}}^{\mathrm{occ}} f_{n\mathbf{k}}
+\sum_I \sum_{ij} \sum_{\mu\nu}
+\epsilon_{\gamma\mu\nu}
+\frac{1}{i}
+\left(
+i \langle u_{n\mathbf{k}} | \partial_{k_\mu}
+\widetilde{\beta}_i^{\mathbf{k},I} \rangle
+\right)
+D_{ij}^I
+\left(
+- i \langle \partial_{k_\nu}
+\widetilde{\beta}_j^{\mathbf{k},I} | u_{n\mathbf{k}} \rangle
+\right)
+\nonumber\\
+&=
+\frac{i\alpha}{2}
+\sum_{n\mathbf{k}}^{\mathrm{occ}} f_{n\mathbf{k}}
+\sum_I \sum_{ij} \sum_{\mu\nu}
+\epsilon_{\gamma\mu\nu}
+\langle u_{n\mathbf{k}} | \partial_{k_\mu}
+\widetilde{\beta}_i^{\mathbf{k},I} \rangle
+D_{ij}^I
+\langle \partial_{k_\nu}
+\widetilde{\beta}_j^{\mathbf{k},I} | u_{n\mathbf{k}} \rangle .
+\label{eq:bare_before_im}
+\end{align}
+
+Since the contraction with $\epsilon_{\gamma\mu\nu}$ selects the
+antisymmetric part in the Cartesian indices, the result can be written
+in manifestly real form as
+\begin{equation}
+\Delta M_{\mathrm{bare},\gamma}
+=
+-\frac{\alpha}{2}
+\sum_{n\mathbf{k}}^{\mathrm{occ}} f_{n\mathbf{k}}
+\sum_I \sum_{ij} \sum_{\mu\nu}
+\epsilon_{\gamma\mu\nu}
+\,\mathrm{Im}
+\left[
+\langle u_{n\mathbf{k}} | \partial_{k_\mu}
+\widetilde{\beta}_i^{\mathbf{k},I} \rangle
+D_{ij}^I
+\langle \partial_{k_\nu}
+\widetilde{\beta}_j^{\mathbf{k},I} | u_{n\mathbf{k}} \rangle
+\right] .
+\label{eq:deltam_bare_final}
+\end{equation}
+
+\noindent\textit{Note.}
+In the implementation the full double sum over $(\mu,\nu)$ is not
+performed explicitly. For a given magnetization component $\gamma$, only
+one cyclic pair $(\mu,\nu)$ is evaluated. For instance,
+\[
+(\gamma,\mu,\nu)=(1,2,3),(2,3,1),(3,1,2),
+\]
+so that $\epsilon_{\gamma\mu\nu}=+1$.
+
+Let
+\begin{equation}
+Z_{\mu\nu}
+=
+\frac{\alpha}{2}
+\sum_{n\mathbf{k}}^{\mathrm{occ}} f_{n\mathbf{k}}
+\sum_I \sum_{ij}
+\langle u_{n\mathbf{k}} | \partial_{k_\mu}
+\widetilde{\beta}_i^{\mathbf{k},I} \rangle
+D_{ij}^I
+\langle \partial_{k_\nu}
+\widetilde{\beta}_j^{\mathbf{k},I} | u_{n\mathbf{k}} \rangle .
+\end{equation}
+Using the Hermiticity of $D_{ij}^I$, one has
+\begin{equation}
+Z_{\nu\mu}=Z_{\mu\nu}^{*}.
+\end{equation}
+Therefore the two antisymmetric terms selected by
+$\epsilon_{\gamma\mu\nu}$ give
+\begin{align}
+\epsilon_{\gamma\mu\nu}\mathrm{Im}\,Z_{\mu\nu}
++
+\epsilon_{\gamma\nu\mu}\mathrm{Im}\,Z_{\nu\mu}
+&=
+\mathrm{Im}\,Z_{\mu\nu}
+-
+\mathrm{Im}\,Z_{\nu\mu}
+\nonumber\\
+&=
+\mathrm{Im}\,Z_{\mu\nu}
+-
+\mathrm{Im}\,Z_{\mu\nu}^{*}
+\nonumber\\
+&=
+2\,\mathrm{Im}\,Z_{\mu\nu}.
+\end{align}
+Thus, evaluating only one cyclic Cartesian pair requires multiplying the
+result by a factor of two. With the overall negative sign in
+Eq.~\eqref{eq:deltam_bare_final}, the implemented contribution is
+therefore proportional to
+\begin{equation}
+-2\,\mathrm{Im}\,Z_{\mu\nu}.
+\end{equation}
+This corresponds to the code statement
+\begin{verbatim}
+delta_M_bare(kk) = delta_M_bare(kk) - 2.d0*imag(tmp)
+\end{verbatim}
+where \texttt{tmp} is the numerical realization of $Z_{\mu\nu}$ for the
+cyclic pair associated with the component \texttt{kk}.
+
+\section{Hubbard potential in separable form}
+
+In the norm-conserving case, the Hubbard potential localized on site $I$
+can be written in separable form as
+\begin{equation}
+\hat V_I^{\mathrm{Hub}}
+=
+\sum_{mm'}
+|\phi_{Im}^{\mathbf{k}}\rangle
+V_{mm'}^I
+\langle \phi_{Im'}^{\mathbf{k}}| .
+\label{eq:vhub_sep}
+\end{equation}
+Here:
+\begin{itemize}
+\item $|\phi_{Im}^{\mathbf{k}}\rangle$ and
+$\langle \phi_{Im'}^{\mathbf{k}}|$ denote the Bloch-summed Hubbard
+projectors associated with site $I$;
+\item depending on the chosen Hubbard-projector scheme, these projectors
+may be atomic orbitals, orthogonalized atomic orbitals, or projectors
+read from the pseudopotential file;
+\item $m,m'$ label the local Hubbard manifold;
+\item $V_{mm'}^I$ is the Hubbard potential matrix on site $I$.
+\end{itemize}
+
+\section{Derivation of the Hubbard contribution}
+\label{sec:hubmagnetization}
+
+We now repeat the same derivation with $\hat V_I = \hat V_I^{\mathrm{Hub}}$. Starting from Eq.~\eqref{eq:generic_form},
+\begin{equation}
+\Delta \mathbf{M}_{\mathrm{Hub}}
+=
+-\frac{\alpha}{2}
+\sum_I
+\left\langle
+\bm{\rho}_I \times \frac{1}{i}\hat V_I^{\mathrm{Hub}} \bm{\rho}_I
+\right\rangle .
+\label{eq:hub_start}
+\end{equation}
+
+Substituting Eq.~\eqref{eq:vhub_sep},
+\begin{equation}
+\Delta \mathbf{M}_{\mathrm{Hub}}
+=
+-\frac{\alpha}{2}
+\sum_I
+\left\langle
+\bm{\rho}_I \times \frac{1}{i}
+\sum_{mm'}
+V_{mm'}^I
+{\phi_{Im}^{\mathbf{k}}}{\phi_{Im'}^{\mathbf{k}}}
+\bm{\rho}_I
+\right\rangle .
+\end{equation}
+By linearity,
+\begin{equation}
+\Delta \mathbf{M}_{\mathrm{Hub}}
+=
+-\frac{\alpha}{2}
+\sum_I \sum_{mm'}
+\left\langle
+\bm{\rho}_I \times \frac{1}{i}
+V_{mm'}^I
+{\phi_{Im}^{\mathbf{k}}}{\phi_{Im'}^{\mathbf{k}}}
+\bm{\rho}_I
+\right\rangle .
+\end{equation}
+
+Evaluating over occupied Bloch states,
+\begin{equation}
+\Delta \mathbf{M}_{\mathrm{Hub}}
+=
+-\frac{\alpha}{2}
+\sum_{n\mathbf{k}}^{\mathrm{occ}} f_{n\mathbf{k}}
+\sum_I \sum_{mm'}
+\left\langle u_{n\mathbf{k}} \left|
+\bm{\rho}_I \times \frac{1}{i}
+V_{mm'}^I
+{\phi_{Im}^{\mathbf{k}}}{\phi_{Im'}^{\mathbf{k}}}
+\bm{\rho}_I
+\right| u_{n\mathbf{k}} \right\rangle .
+\label{eq:hub_exp}
+\end{equation}
+
+Using Eq.~\eqref{eq:cross_components},
+\begin{equation}
+\Delta M_{\mathrm{Hub},\gamma}
+=
+-\frac{\alpha}{2}
+\sum_{n\mathbf{k}}^{\mathrm{occ}} f_{n\mathbf{k}}
+\sum_I \sum_{mm'} \sum_{\mu\nu}
+\epsilon_{\gamma\mu\nu}
+\frac{1}{i}
+\langle u_{n\mathbf{k}} | \rho_{I,\mu} | \phi_{Im}^{\mathbf{k}} \rangle
+V_{mm'}^I
+\langle \phi_{Im'}^{\mathbf{k}} | \rho_{I,\nu} | u_{n\mathbf{k}} \rangle .
+\label{eq:hub_components}
+\end{equation}
+
+In complete analogy with the KB projectors, the Hubbard projectors
+entering the $k$ derivatives are understood to be no-phase projectors.
+We denote them by $\widetilde{\phi}_{Im}^{\mathbf{k}}$. The tilde will
+be omitted in the final compact expressions only when no ambiguity is
+possible.
+
+Now use the analogues of Eqs.~\eqref{eq:rho_beta_left} and
+\eqref{eq:rho_beta_right} for the no-phase Hubbard projectors:
+\begin{equation}
+\langle u_{n\mathbf{k}} | \rho_{I,\mu} |
+\widetilde{\phi}_{Im}^{\mathbf{k}} \rangle
+=
+i \,
+\langle u_{n\mathbf{k}} |
+\partial_{k_\mu} \widetilde{\phi}_{Im}^{\mathbf{k}} \rangle ,
+\label{eq:rho_phi_left}
+\end{equation}
+and
+\begin{equation}
+\langle \widetilde{\phi}_{Im'}^{\mathbf{k}} |
+\rho_{I,\nu} | u_{n\mathbf{k}} \rangle
+=
+- i \,
+\langle
+\partial_{k_\nu} \widetilde{\phi}_{Im'}^{\mathbf{k}}
+| u_{n\mathbf{k}} \rangle .
+\label{eq:rho_phi_right}
+\end{equation}
+
+Substituting into Eq.~\eqref{eq:hub_components},
+\begin{align}
+\Delta M_{\mathrm{Hub},\gamma}
+&=
+-\frac{\alpha}{2}
+\sum_{n\mathbf{k}}^{\mathrm{occ}} f_{n\mathbf{k}}
+\sum_I \sum_{mm'} \sum_{\mu\nu}
+\epsilon_{\gamma\mu\nu}
+\frac{1}{i}
+\left(
+i \langle u_{n\mathbf{k}} |
+\partial_{k_\mu} \widetilde{\phi}_{Im}^{\mathbf{k}} \rangle
+\right)
+V_{mm'}^I
+\left(
+- i \langle
+\partial_{k_\nu} \widetilde{\phi}_{Im'}^{\mathbf{k}}
+| u_{n\mathbf{k}} \rangle
+\right)
+\nonumber\\
+&=
+\frac{i \alpha}{2}
+\sum_{n\mathbf{k}}^{\mathrm{occ}} f_{n\mathbf{k}}
+\sum_I \sum_{mm'} \sum_{\mu\nu}
+\epsilon_{\gamma\mu\nu}
+\langle u_{n\mathbf{k}} |
+\partial_{k_\mu} \widetilde{\phi}_{Im}^{\mathbf{k}} \rangle
+V_{mm'}^I
+\langle
+\partial_{k_\nu} \widetilde{\phi}_{Im'}^{\mathbf{k}}
+| u_{n\mathbf{k}} \rangle .
+\label{eq:hub_before_im}
+\end{align}
+
+Again, since the contraction with $\epsilon_{\gamma\mu\nu}$ selects the
+antisymmetric part in the Cartesian indices, the result can be written
+in manifestly real form as
+\begin{equation}
+\Delta M_{\mathrm{Hub},\gamma}
+=
+-\frac{\alpha}{2}
+\sum_{n\mathbf{k}}^{\mathrm{occ}} f_{n\mathbf{k}}
+\sum_I \sum_{mm'} \sum_{\mu\nu}
+\epsilon_{\gamma\mu\nu}
+\,\mathrm{Im}
+\left[
+\langle u_{n\mathbf{k}} |
+\partial_{k_\mu} \widetilde{\phi}_{Im}^{\mathbf{k}} \rangle
+V_{mm'}^I
+\langle
+\partial_{k_\nu} \widetilde{\phi}_{Im'}^{\mathbf{k}}
+| u_{n\mathbf{k}} \rangle
+\right] .
+\label{eq:deltam_hub_final}
+\end{equation}
+
+In the present norm-conserving case, with \(S=\mathbb{I}\), the matrix \(V_{mm'}^I\) appearing in the separable Hubbard operator is identified with the on-site Hubbard potential matrix
+\[
+V_{mm'}^I \equiv U_{mm'}^{I,\sigma}
+=
+U^I \left[\frac{\delta_{mm'}}{2} - n_{mm'}^{I,\sigma}\right],
+\]
+with the spin index \(\sigma\) understood implicitly whenever not written explicitly.
+\clearpage
+The quantity
+\[
+\left\langle \partial_{k_\nu} \widetilde{\phi}_{Im'}^{\mathbf{k}} \middle| u_{n\mathbf{k}} \right\rangle
+\]
+is evaluated numerically by the routine \texttt{compute\_projU}, reported below, which is the direct analogue of \texttt{compute\_dbecp} for the Hubbard projectors (\texttt{wfcU} in QE). In the present implementation, the explicit stripping of the Bloch phase has not yet been introduced; however, tests indicate that this has only a minor impact on the numerical result.
+
+\begin{verbatim}
+  !------------------------------------------------------------------
+  ! derivative of the wfcU (projU)
+  !------------------------------------------------------------------
+  SUBROUTINE compute_projU
+    USE cell_base, ONLY : tpiba
+    USE uspp_init, ONLY : init_us_2
+    USE uspp,  ONLY : vkb
+    USE ldaU, ONLY : wfcU
+    implicit none
+    integer :: ipol, sig
+    integer :: iu
+    real(dp) :: kq(3), xk_save(3)
+
+    call deallocate_bec_type(becp)
+    xk_save(:) = xk(:,ik)
+
+    if (nkb == 0) return
+    wfcU_save = wfcU
+
+    do ipol = 1, 3
+      projU(:,:,ipol) = (0.d0,0.d0)
+      do sig = -1, 1, 2
+        xk(:,ik) = xk_save(:)
+        xk(ipol,ik) = xk(ipol,ik) + sig * delta_k
+        call orthoUwfc_k( ik, .FALSE. )
+        call strip_kphase_wfcU( ik )
+        call calbec( npw, wfcU, evc, auxU, nbnd )
+        projU(:,:,ipol) = projU(:,:,ipol) + &
+                          0.5d0*sig/(delta_k*tpiba) * auxU(:,:)
+      enddo
+    enddo
+
+    xk(:,ik) = xk_save(:)
+    wfcU = wfcU_save
+    CALL allocate_bec_type(nkb, nbnd, becp)
+  END SUBROUTINE compute_projU
+\end{verbatim}
+The following routine removes the $k$-dependent Bloch phase from the Hubbard projectors before evaluating the non-local Hubbard contribution to the orbital magnetization.
+\begin{verbatim}
+
+SUBROUTINE strip_kphase_wfcU(ik)
+  USE kinds,     ONLY : DP
+  USE constants, ONLY : tpi          ! tpi = 2*pi in QE
+  USE klist,     ONLY : xk
+  USE ions_base, ONLY : nat, tau, ityp
+  USE ldaU,      ONLY : wfcU, nwfcU, Hubbard_l  ! Hubbard_l(ntyp)
+  IMPLICIT NONE
+
+  INTEGER, INTENT(IN) :: ik
+  INTEGER :: na, nt, l, m, iu, nproj
+  REAL(DP) :: arg
+  COMPLEX(DP) :: phase
+
+  iu = 0
+
+  DO na = 1, nat
+     nt = ityp(na)
+     l  = Hubbard_l(nt)
+
+     ! Convenzione tipica: l < 0 => no Hubbard on this type
+     IF (l >= 0) THEN
+        nproj = 2*l + 1   ! collinear / NC
+
+        arg = tpi * ( xk(1,ik)*tau(1,na) + xk(2,ik)*tau(2,na) + xk(3,ik)*tau(3,na) )
+        phase = CMPLX( COS(arg), SIN(arg), KIND=DP )  ! exp(+i arg)
+
+        DO m = 1, nproj
+           iu = iu + 1
+           wfcU(:,iu) = phase * wfcU(:,iu)
+        END DO
+     END IF
+  END DO
+
+  IF (iu /= nwfcU) THEN
+     CALL errore('strip_kphase_wfcU', 'unexpected wfcU ordering: iu != nwfcU', 1)
+  END IF
+END SUBROUTINE strip_kphase_wfcU
+
+
+\end{verbatim}
+The final Hubbard contribution in Eq.~\eqref{eq:deltam_hub_final} is evaluated by the routine reported below:
+\begin{verbatim}
+  !------------------------------------------------------------------
+  ! GIPAW correction (delta_M_Hub)
+  !------------------------------------------------------------------
+  SUBROUTINE calc_delta_M_hub
+    USE ions_base,  ONLY : nat, ntyp => nsp, ityp
+    USE ldaU,       ONLY : Hubbard_l, is_hubbard, offsetU, nwfcU
+    USE scf,        ONLY : v
+    implicit none
+    complex(dp) :: tmp, hub_product
+    integer :: ibnd, na, nt, m1, m2, ldim, off
+
+    if (nwfcU == 0) return
+
+    tmp = (0.d0, 0.d0)
+
+    do nt = 1, ntyp
+      if (.not. is_hubbard(nt)) cycle
+      ldim = 2*Hubbard_l(nt) + 1
+
+      do na = 1, nat
+        if (ityp(na) /= nt) cycle
+        off = offsetU(na)
+
+        do m2 = 1, ldim
+          do m1 = 1, ldim
+            do ibnd = 1, nbnd
+              hub_product = conjg(projU(off+m1, ibnd, ii)) * &
+                                 projU(off+m2, ibnd, jj)
+              tmp = tmp + wg(ibnd,ik) * &
+                          v%ns(m1, m2, current_spin, na) * &
+                          hub_product
+            enddo
+          enddo
+        enddo
+      enddo
+    enddo
+
+    delta_M_hub(kk) = delta_M_hub(kk) - 2.d0*imag(tmp)
+  END SUBROUTINE calc_delta_M_hub
+\end{verbatim}
+
+For fixed Cartesian indices \(\mu \equiv ii\) and \(\nu \equiv jj\), this routine evaluates the quantity
+\[
+\sum_{n\mathbf{k}}^{\mathrm{occ}} w_{n\mathbf{k}}
+\sum_I \sum_{mm'}
+U_{mm'}^{I,\sigma}
+\left[
+\left\langle \partial_{k_\mu} \phi_{Im}^{\mathbf{k}} \middle| u_{n\mathbf{k}} \right\rangle
+\right]^*
+\left\langle \partial_{k_\nu} \phi_{Im'}^{\mathbf{k}} \middle| u_{n\mathbf{k}} \right\rangle ,
+\]
+where the Hubbard potential matrix \(U_{mm'}^{I,\sigma}\) is stored as
+\texttt{v\%ns(m1,m2,current\_spin,na)}, while the derivative matrix elements are provided by \texttt{projU}. The corresponding contribution to the \(\kk\)-th component of the magnetization is then obtained as
+\[
+\Delta M_{\mathrm{Hub},\kk} \propto -2\,\mathrm{Im}\!\left[\cdots\right].
+\]
+
+
+
+\subsection{Numerical test with LiCoO$_2$.}
+
+As a numerical benchmark, we consider the NMR shielding tensor of
+LiCoO$_2$ at the DFT+$U$ level, comparing QE-CONVERSE with the
+linear-response GIPAW implementation in CASTEP. Norm-conserving
+pseudopotentials and a plane-wave cutoff of 60 Ry were used, with a
+Hubbard correction of $U=8$ eV applied to the Co-$3d$ manifold. The
+comparison with CASTEP is particularly relevant, since its GIPAW
+implementation explicitly includes the non-local Hubbard contribution in
+the magnetic-response operator.
+
+Table~\ref{tab:licoo2_dftu_shielding} reports the isotropic shielding
+values for the three equivalent Li, Co, and O atoms in the unit cell. For
+each atomic species, both methods give internally consistent values across
+the three symmetry-equivalent sites. The agreement is satisfactory for Li
+and Co, whereas a sizeable discrepancy is observed for the oxygen
+shielding. This is consistent with the fact that, although the Hubbard
+correction is applied only to the Co-$3d$ manifold, the oxygen shielding is
+sensitive to the Co-$3d$/O-$2p$ hybridization and therefore to the detailed
+definition of the Hubbard subspace. A possible contribution to the
+remaining discrepancy is the different construction of the Hubbard
+projectors and of the associated non-local magnetic-response term in the
+two implementations.
+\begin{table}[h]
+\centering
+\caption{$^{7}$Li, $^{59}$Co, and $^{17}$O isotropic NMR shielding (ppm) in LiCoO$_2$ at the DFT+$U$ level ($U=8$ eV on Co-$3d$), computed with QE-CONVERSE and CASTEP. Three symmetry-equivalent atoms of each species are reported.}
+\label{tab:licoo2_dftu_shielding}
+\begin{tabular}{llcc}
+\hline
+Atom & Site & QE-CONVERSE (ppm) & CASTEP (ppm) \\
+\hline
+Li & 1 & 92.51 & 87.06 \\
+Li & 2 & 92.33 & 87.06 \\
+Li & 3 & 92.32 & 87.06 \\
+\hline
+Co & 1 & -4679.62 & -4807.13 \\
+Co & 2 & -4679.64 & -4807.12 \\
+Co & 3 & -4679.64 & -4807.11 \\
+\hline
+O & 1 & 343.12 & 230.66 \\
+O & 2 & 343.11 & 230.68 \\
+O & 3 & 343.03 & 230.67 \\
+\hline
+\end{tabular}
+\end{table}
+
+\newpage
+\clearpage
+
+\section{DFT+$U$+$V$}
+
+In DFT+$U$+$V$, a corrective Hubbard energy $E_{U+V}$ is added to the standard DFT energy $E_{\mathrm{DFT}}$:
+%
+\begin{equation}
+    E_{\mathrm{DFT}+U+V} = E_{\mathrm{DFT}} + E_{U+V} .
+    \label{eq:Edft_plus_uv}
+\end{equation}
+%
+Unlike DFT+$U$, which only accounts for on-site interactions scaled by $U$, DFT+$U$+$V$ also includes inter-site interactions between an atom and its neighbors, scaled by $V$. In the simplified rotationally-invariant formulation, the extended Hubbard correction reads:
+%
+\begin{eqnarray}
+    E_{U+V} & = & \frac{1}{2} \sum_I \sum_{\sigma m m'}
+    U^I \left( \delta_{m m'} - n^{II \sigma}_{m m'} \right) n^{II \sigma}_{m' m} \nonumber \\
+    %
+    & & - \frac{1}{2} \sum_{I} \sum_{J (J \ne I)}^{*} \sum_{\sigma m m'} V^{I J}
+    n^{I J \sigma}_{m m'} n^{J I \sigma}_{m' m} \,,
+    \label{eq:Edftu}
+\end{eqnarray}
+%
+where $I$ and $J$ index atomic sites, $m$ and $m'$ denote magnetic quantum numbers, and $U^I$ and $V^{IJ}$ are the \textit{effective} on-site and inter-site Hubbard parameters, respectively (here and everywhere in the following, $U^I$ denotes the difference between the screened Coulomb interaction parameter and the Hund's exchange interaction parameter). The asterisk denotes that, for each atom $I$, the sum over $J$ includes all neighbors up to a defined cutoff distance. The generalized occupation matrices $n^{IJ \sigma}_{m m'}$ are obtained by projecting KS states $\psi^\sigma_{v,\mathbf{k}}$ onto localized orbitals $\phi^I_m(\mathbf{r})$:
+%
+\begin{equation}
+    n^{I J \sigma}_{m m'} = \sum_{v,\mathbf{k}} f^\sigma_{v,\mathbf{k}}
+    \braket{\psi^\sigma_{v,\mathbf{k}}}{\phi^{J}_{m'}} \braket{\phi^{I}_{m}}{\psi^\sigma_{v,\mathbf{k}}} \,,
+    \label{eq:occ_matrix_0}
+\end{equation}
+%
+where $v$ and $\sigma$ label bands and spin, $\mathbf{k}$ runs over the first Brillouin zone (BZ), and $f^\sigma_{v,\mathbf{k}}$ are the KS occupations. In Eq.~\eqref{eq:occ_matrix_0}, $m \in I$ and $m' \in J$, meaning that $m$ runs over the magnetic quantum numbers associated with a fixed principal quantum number $n$ and orbital angular momentum $l$ of atom $I$, and analogously $m'$ for atom $J$. The corresponding generalized KS equation can be written as~\cite{Campo:2010},
+%
+\begin{equation}
+     \left(\hat{\mathcal H}_\mathrm{KS}^\sigma +
+     \hat{\mathcal V}_{U+V}^\sigma \right)|\psi_{v,{\bf k}}^\sigma\rangle
+     = \varepsilon_{v,{\bf k}}^\sigma |\psi_{v,{\bf k}}^\sigma\rangle,
+\end{equation}
+%
+where $\hat{\mathcal H}_\mathrm{KS}^\sigma$ is the KS Hamiltonian of the standard DFT, $\varepsilon_{v,{\bf k}}^\sigma$ is the $v$-th band energy at momentum ${\bf k}$ and spin $\sigma$, and $\hat{\mathcal V}_{U+V}^\sigma$ is the Hubbard potential that is derived from the Hubbard energy~\eqref{eq:Edftu} and which reads~\cite{Timrov:2021}:
+%
+\begin{eqnarray} 
+\hat{\mathcal V}_{U+V}^\sigma & = &
+    \sum_{I}\sum_{mm'}\frac{U^I}{2}
+    \left(
+    \delta_{mm'}-2n^{II\sigma}_{mm'}
+    \right) 
+    |\phi^I_m\rangle
+    \langle\phi^I_{m'}| \nonumber \\
+    % 
+    & & - \sum_{I} \sum_{J (J \ne I)}^{*}\sum_{mm'} V^{IJ} n^{IJ\sigma}_{mm'}
+    |\phi^I_m\rangle
+    \langle \phi^J_{m'}|.
+    \label{eq:Vdftuv}
+\end{eqnarray}
+%
+In Eqs.~\eqref{eq:Edftu} and \eqref{eq:Vdftuv}, the effective on-site $U^I$ and inter-site $V^{IJ}$ terms act in opposition when both parameters are positive: the on-site term favors electron localization on atomic sites and suppresses hybridization, whereas the inter-site term enhances hybridization with neighboring atoms. Accurate first-principles evaluation of $U^I$ and $V^{IJ}$ is therefore crucial to correctly describe the balance between localization and hybridization. 
+
+It is important to note that the computed values of $U^I$ and $V^{IJ}$ depend on the choice of Hubbard projector functions $\phi^I_{m}(\mathbf{r})$ used to define the occupation matrix in Eq.~\eqref{eq:occ_matrix_0} and the Hubbard potential in Eq.~\eqref{eq:Vdftuv}.
+
+\subsection{Contribution to the orbital magnetization}
+
+We now derive the contribution of the full DFT$+U+V$ potential to the orbital
+magnetization, generalizing the DFT$+U$ result of
+Section~\ref{sec:hubmagnetization}.
+
+\paragraph{Notation.}
+It is convenient to introduce a unified potential matrix that covers both the
+on-site ($J=I$) and inter-site ($J\ne I$) terms of
+Eq.~\eqref{eq:Vdftuv}:
+\begin{equation}
+  W_{mm'}^{IJ,\sigma}
+  =
+  \begin{cases}
+    \dfrac{U^I}{2}\!\left(\delta_{mm'} - 2n_{mm'}^{II\sigma}\right)
+    & J = I, \\[6pt]
+    -V^{IJ}\,n_{mm'}^{IJ\sigma}
+    & J \ne I.
+  \end{cases}
+  \label{eq:Wmat}
+\end{equation}
+In QE the full matrix $W_{mm'}^{IJ,\sigma}$ is stored as
+\texttt{v\_nsg(m,m',viz,na,$\sigma$)}, where \texttt{na}$=I$ and
+\texttt{viz} is the neighbor index such that
+\texttt{neighood(na)\%neigh(viz)}$=J$.  The on-site entry corresponds to
+the self-neighbor (\texttt{neigh(viz)}$=I$), so the sum over all viz
+automatically includes both parts.
+
+Using $W_{mm'}^{IJ}$, the DFT$+U+V$ potential reads
+\begin{equation}
+  \hat{\mathcal{V}}_{U+V}^{\sigma}
+  =
+  \sum_{I}\sum_{J}^{*}\sum_{mm'}
+  W_{mm'}^{IJ,\sigma}\,
+  |\phi^{I}_{m}\rangle\langle\phi^{J}_{m'}|,
+  \label{eq:Vuv_compact}
+\end{equation}
+where the asterisk on $\sum_J$ again denotes the sum over the self-site
+($J=I$) and all neighbors within the cutoff.
+
+\paragraph{On-site part ($J=I$).}
+The on-site contribution has the same operator structure as the
+DFT$+U$ potential: both bra and ket belong to atom $I$.  The
+derivation of Section~\ref{sec:hubmagnetization} therefore applies
+unchanged, with $V_{mm'}^I \to W_{mm'}^{II,\sigma}$.  It yields
+Eq.~\eqref{eq:deltam_hub_final} with this replacement.
+
+\paragraph{Inter-site part ($J\ne I$).}
+For the inter-site terms, the ket $|\phi^I_m\rangle$ belongs to atom
+$I$ but the bra $\langle\phi^J_{m'}|$ belongs to atom $J\ne I$.
+Starting from Eq.~\eqref{eq:generic_form}, the inter-site contribution
+to the component $\gamma$ of the orbital magnetization reads
+\begin{equation}
+  \Delta M_{V,\gamma}
+  =
+  -\frac{\alpha}{2}
+  \sum_{n\mathbf{k}}^{\mathrm{occ}}f_{n\mathbf{k}}
+  \sum_{I}\sum_{J\ne I}^{*}\sum_{mm'}\sum_{\mu\nu}
+  \epsilon_{\gamma\mu\nu}\,\frac{1}{i}
+  \langle u_{n\mathbf{k}}|\rho_{I,\mu}|\widetilde\phi^{\mathbf{k},I}_{m}\rangle
+  \,W_{mm'}^{IJ,\sigma}\,
+  \langle\widetilde\phi^{\mathbf{k},J}_{m'}|\rho_{I,\nu}|u_{n\mathbf{k}}\rangle.
+  \label{eq:deltaM_V_components}
+\end{equation}
+The left matrix element is handled exactly as in the DFT$+U$ case via
+the no-phase identity~\eqref{eq:rho_phi_left}:
+\begin{equation}
+  \langle u_{n\mathbf{k}}|\rho_{I,\mu}|\widetilde\phi^{\mathbf{k},I}_{m}\rangle
+  =
+  i\,\langle u_{n\mathbf{k}}|\partial_{k_\mu}\widetilde\phi^{\mathbf{k},I}_{m}\rangle.
+  \label{eq:left_I}
+\end{equation}
+
+For the right matrix element we decompose the relative coordinate with
+respect to $I$ into the relative coordinate with respect to $J$ plus
+the inter-site displacement $\mathbf{d}^{IJ}=\mathbf{R}_J-\mathbf{R}_I$:
+\begin{equation}
+  \rho_{I,\nu} = \rho_{J,\nu} + d^{IJ}_\nu,
+  \qquad
+  \mathbf{d}^{IJ} = \mathbf{R}_J - \mathbf{R}_I.
+  \label{eq:rho_decomp}
+\end{equation}
+Applying the no-phase identity for atom $J$,
+Eq.~\eqref{eq:rho_phi_right}, to the first term, and collecting:
+\begin{equation}
+  \langle\widetilde\phi^{\mathbf{k},J}_{m'}|\rho_{I,\nu}|u_{n\mathbf{k}}\rangle
+  =
+  -i\,\langle\partial_{k_\nu}\widetilde\phi^{\mathbf{k},J}_{m'}|u_{n\mathbf{k}}\rangle
+  +
+  d^{IJ}_\nu\,
+  \langle\widetilde\phi^{\mathbf{k},J}_{m'}|u_{n\mathbf{k}}\rangle.
+  \label{eq:right_IJ}
+\end{equation}
+The second term is new: it involves the regular (non-derivative) Hubbard
+overlap
+\begin{equation}
+  s^{J}_{m',n}(\mathbf{k})
+  \;\equiv\;
+  \langle\widetilde\phi^{\mathbf{k},J}_{m'}|u_{n\mathbf{k}}\rangle,
+  \label{eq:hubbecp}
+\end{equation}
+which is the no-phase analogue of the standard $\langle\beta|u\rangle$
+projector overlap.
+
+Substituting Eqs.~\eqref{eq:left_I}--\eqref{eq:right_IJ} into
+Eq.~\eqref{eq:deltaM_V_components} and using $\tfrac{1}{i}\cdot i = 1$:
+\begin{align}
+  \Delta M_{V,\gamma}
+  &=
+  -\frac{\alpha}{2}
+  \sum_{n\mathbf{k}}^{\mathrm{occ}}f_{n\mathbf{k}}
+  \sum_{I,J\ne I}^{*}\sum_{mm'}\sum_{\mu\nu}
+  \epsilon_{\gamma\mu\nu}\,
+  \langle u_{n\mathbf{k}}|\partial_{k_\mu}\widetilde\phi^{\mathbf{k},I}_{m}\rangle
+  W_{mm'}^{IJ,\sigma}
+  \!\left[
+    -i\,\langle\partial_{k_\nu}\widetilde\phi^{\mathbf{k},J}_{m'}|u_{n\mathbf{k}}\rangle
+    +
+    d^{IJ}_\nu\,s^{J}_{m',n}
+  \right].
+  \label{eq:deltaM_V_split}
+\end{align}
+This splits into two structurally distinct contributions.
+
+\paragraph{Part~A: derivative--derivative term.}
+The first bracket term gives
+\begin{equation}
+  \Delta M_{V,\gamma}^{A}
+  =
+  \frac{i\alpha}{2}
+  \sum_{n\mathbf{k}}^{\mathrm{occ}}f_{n\mathbf{k}}
+  \sum_{I,J\ne I}^{*}\sum_{mm'}\sum_{\mu\nu}
+  \epsilon_{\gamma\mu\nu}\,
+  \langle u_{n\mathbf{k}}|\partial_{k_\mu}\widetilde\phi^{\mathbf{k},I}_{m}\rangle
+  W_{mm'}^{IJ,\sigma}\,
+  \langle\partial_{k_\nu}\widetilde\phi^{\mathbf{k},J}_{m'}|u_{n\mathbf{k}}\rangle,
+  \label{eq:deltaM_VA}
+\end{equation}
+which has exactly the same structure as the DFT$+U$ result
+Eq.~\eqref{eq:hub_before_im}, now with projector derivatives from two
+\emph{different} atomic centers.  Passing to the imaginary part as in
+Section~\ref{sec:hubmagnetization}:
+\begin{equation}
+  \Delta M_{V,\gamma}^{A}
+  =
+  -\frac{\alpha}{2}
+  \sum_{n\mathbf{k}}^{\mathrm{occ}}f_{n\mathbf{k}}
+  \sum_{I,J\ne I}^{*}\sum_{mm'}\sum_{\mu\nu}
+  \epsilon_{\gamma\mu\nu}\,
+  \mathrm{Im}\!\left[
+    \langle u_{n\mathbf{k}}|\partial_{k_\mu}\widetilde\phi^{\mathbf{k},I}_{m}\rangle
+    W_{mm'}^{IJ,\sigma}\,
+    \langle\partial_{k_\nu}\widetilde\phi^{\mathbf{k},J}_{m'}|u_{n\mathbf{k}}\rangle
+  \right].
+  \label{eq:deltaM_VA_im}
+\end{equation}
+
+\paragraph{Part~B: derivative--overlap term.}
+The second bracket term gives
+\begin{equation}
+  \Delta M_{V,\gamma}^{B}
+  =
+  -\frac{\alpha}{2}
+  \sum_{n\mathbf{k}}^{\mathrm{occ}}f_{n\mathbf{k}}
+  \sum_{I,J\ne I}^{*}\sum_{mm'}\sum_{\mu\nu}
+  \epsilon_{\gamma\mu\nu}\,d^{IJ}_\nu\,
+  \langle u_{n\mathbf{k}}|\partial_{k_\mu}\widetilde\phi^{\mathbf{k},I}_{m}\rangle
+  W_{mm'}^{IJ,\sigma}\,
+  s^{J}_{m',n}.
+  \label{eq:deltaM_VB}
+\end{equation}
+This term is absent in the pure DFT$+U$ case (where $J=I$ so
+$\mathbf{d}^{II}=\mathbf{0}$) and arises solely from the inter-site
+nature of the projector pair. Since $d^{IJ}_\nu$ is real while
+$W_{mm'}^{IJ,\sigma}$ and $s^J_{m',n}$ are in general complex, the
+expression under the sum is complex; the physical result is its real
+part (the imaginary parts cancel in the full sum over ordered pairs
+$(I,J)$ and $(J,I)$, as follows from $W^{JI}_{m'm} = (W^{IJ}_{mm'})^*$
+and time-reversal):
+\begin{equation}
+  \Delta M_{V,\gamma}^{B}
+  =
+  -\frac{\alpha}{2}
+  \sum_{n\mathbf{k}}^{\mathrm{occ}}f_{n\mathbf{k}}
+  \sum_{I,J\ne I}^{*}\sum_{mm'}\sum_{\mu\nu}
+  \epsilon_{\gamma\mu\nu}\,d^{IJ}_\nu\,
+  \mathrm{Re}\!\left[
+    \langle u_{n\mathbf{k}}|\partial_{k_\mu}\widetilde\phi^{\mathbf{k},I}_{m}\rangle
+    W_{mm'}^{IJ,\sigma}\,
+    s^{J}_{m',n}
+  \right].
+  \label{eq:deltaM_VB_re}
+\end{equation}
+
+\paragraph{Full DFT$+U+V$ magnetization formula.}
+Combining the on-site part (Eq.~\eqref{eq:deltam_hub_final} with
+$V^I\to W^{II}$) with Parts~A and B, the total contribution reads
+\begin{align}
+  \Delta M_{U+V,\gamma}
+  &=
+  -\frac{\alpha}{2}
+  \sum_{n\mathbf{k}}^{\mathrm{occ}}f_{n\mathbf{k}}
+  \sum_{I}\sum_{J}^{*}\sum_{mm'}\sum_{\mu\nu}
+  \epsilon_{\gamma\mu\nu}\,
+  \mathrm{Im}\!\left[
+    \langle u_{n\mathbf{k}}|\partial_{k_\mu}\widetilde\phi^{\mathbf{k},I}_{m}\rangle
+    W_{mm'}^{IJ,\sigma}\,
+    \langle\partial_{k_\nu}\widetilde\phi^{\mathbf{k},J}_{m'}|u_{n\mathbf{k}}\rangle
+  \right]
+  \nonumber\\
+  &\quad
+  -\frac{\alpha}{2}
+  \sum_{n\mathbf{k}}^{\mathrm{occ}}f_{n\mathbf{k}}
+  \sum_{I}\sum_{J\ne I}^{*}\sum_{mm'}\sum_{\mu\nu}
+  \epsilon_{\gamma\mu\nu}\,d^{IJ}_\nu\,
+  \mathrm{Re}\!\left[
+    \langle u_{n\mathbf{k}}|\partial_{k_\mu}\widetilde\phi^{\mathbf{k},I}_{m}\rangle
+    W_{mm'}^{IJ,\sigma}\,
+    s^{J}_{m',n}
+  \right].
+  \label{eq:deltam_uv_final}
+\end{align}
+The first line (the Im term) extends over \emph{all} neighbors including
+$J=I$; for $J=I$ it reduces to Eq.~\eqref{eq:deltam_hub_final} since
+$W^{II}=V^{II}$ (the DFT$+U$ potential matrix).  The second line
+(the Re term) is strictly inter-site and vanishes when $V=0$.
+
+\paragraph{Implementation notes.}
+\begin{itemize}
+  \item The derivative overlaps
+    $\langle u_{n\mathbf{k}}|\partial_{k_\mu}\widetilde\phi^{\mathbf{k},I}_{m}\rangle$
+    and
+    $\langle\partial_{k_\nu}\widetilde\phi^{\mathbf{k},J}_{m'}|u_{n\mathbf{k}}\rangle$
+    are already computed by \texttt{compute\_dhubbecp} for every Hubbard
+    atom.
+
+  \item The regular overlap $s^J_{m',n}=\langle\widetilde\phi^{\mathbf{k},J}_{m'}|u_{n\mathbf{k}}\rangle$
+    must be computed separately, e.g.\ by calling \texttt{orthoUwfc\_k}
+    at the unshifted $\mathbf{k}$, stripping the phase via
+    \texttt{strip\_kphase\_wfcU}, and projecting with \texttt{calbec}.
+
+  \item The potential matrix $W_{mm'}^{IJ,\sigma}$ is stored as
+    \texttt{v\_nsg(m,m',viz,na,$\sigma$)}, where \texttt{na}$=I$ and
+    \texttt{neighood(na)\%neigh(viz)}$=J$.
+
+  \item The inter-site displacement $\mathbf{d}^{IJ}=\mathbf{R}_J-\mathbf{R}_I$
+    is available from \texttt{tau(:,na2)~-~tau(:,na1)} in crystal
+    coordinates (converted to Cartesian with \texttt{alat}).
+\end{itemize}
+
+
+\appendix
+\section*{Appendix}
+\addcontentsline{toc}{section}{Appendix}
+
+\section{Phase convention for the $k$-derivative of Kleinman--Bylander projectors}
+\label{app:kb_no_phase}
+
+In this Appendix we discuss the phase convention used to compute the
+$k$-derivative of Kleinman--Bylander (KB) projectors. The purpose is to
+show that the derivative entering the GIPAW/converse expression must be
+taken with respect to the local coordinate measured from the atomic
+center. This requires removing the global phase associated with the
+position of the atomic center.
+
+Let $\mathbf r$ denote the electronic coordinate and let $\mathbf R_I$
+be the position of atom $I$. We define the local coordinate with respect
+to atom $I$ as
+\begin{equation}
+\boldsymbol{\rho}_I = \mathbf r - \mathbf R_I .
+\label{eq:rho_def_app}
+\end{equation}
+The localized projector centered on atom $I$ is denoted by
+\begin{equation}
+\beta_i^I(\mathbf r) \equiv \beta_i(\mathbf r-\mathbf R_I)
+= \beta_i(\boldsymbol{\rho}_I) .
+\label{eq:beta_centered_def}
+\end{equation}
+
+The GIPAW contribution involving a non-local operator centered on atom
+$I$ contains the relative position operator
+\begin{equation}
+\mathbf r - \mathbf R_I = \boldsymbol{\rho}_I ,
+\end{equation}
+rather than the absolute position $\mathbf r$. Therefore, the
+$k$-derivative of the projector must reproduce the action of
+$\boldsymbol{\rho}_I$.
+
+\subsection{Full-phase projector}
+
+Consider first the projector with the full Bloch phase. In real space,
+this object may be written as
+\begin{equation}
+\beta_{i,\mathrm{full}}^{\mathbf k,I}(\mathbf r)
+=
+e^{-i\mathbf k\cdot\mathbf r}\,
+\beta_i^I(\mathbf r) .
+\label{eq:beta_full_real}
+\end{equation}
+Using Eq.~\eqref{eq:beta_centered_def}, this can also be written as
+\begin{equation}
+\beta_{i,\mathrm{full}}^{\mathbf k,I}(\mathbf r)
+=
+e^{-i\mathbf k\cdot\mathbf r}\,
+\beta_i(\mathbf r-\mathbf R_I) .
+\end{equation}
+Taking the derivative with respect to $k_\mu$ gives
+\begin{equation}
+\partial_{k_\mu}
+\beta_{i,\mathrm{full}}^{\mathbf k,I}(\mathbf r)
+=
+-i r_\mu\,
+\beta_{i,\mathrm{full}}^{\mathbf k,I}(\mathbf r) .
+\label{eq:full_der_real}
+\end{equation}
+Thus, the full-phase derivative generates the absolute coordinate
+$r_\mu$, not the relative coordinate $r_\mu-R_{I,\mu}$.
+
+The same result can be seen in reciprocal space. The plane-wave
+coefficients of the full-phase projector have the structure
+\begin{equation}
+\beta_{i,\mathrm{full}}^{\mathbf k,I}(\mathbf G)
+=
+e^{-i(\mathbf k+\mathbf G)\cdot\mathbf R_I}
+\beta_i(\mathbf k+\mathbf G),
+\label{eq:beta_full_g}
+\end{equation}
+where $\beta_i(\mathbf k+\mathbf G)$ is the Fourier transform of the
+projector centered at the origin. Separating the phase factor gives
+\begin{equation}
+\beta_{i,\mathrm{full}}^{\mathbf k,I}(\mathbf G)
+=
+e^{-i\mathbf k\cdot\mathbf R_I}
+e^{-i\mathbf G\cdot\mathbf R_I}
+\beta_i(\mathbf k+\mathbf G).
+\label{eq:beta_full_g_sep}
+\end{equation}
+Taking the derivative with respect to $k_\mu$ yields
+\begin{align}
+\partial_{k_\mu}
+\beta_{i,\mathrm{full}}^{\mathbf k,I}(\mathbf G)
+&=
+\partial_{k_\mu}
+\left[
+e^{-i\mathbf k\cdot\mathbf R_I}
+e^{-i\mathbf G\cdot\mathbf R_I}
+\beta_i(\mathbf k+\mathbf G)
+\right]
+\nonumber\\
+&=
+e^{-i\mathbf k\cdot\mathbf R_I}
+e^{-i\mathbf G\cdot\mathbf R_I}
+\partial_{k_\mu}\beta_i(\mathbf k+\mathbf G)
+\nonumber\\
+&\quad
+-iR_{I,\mu}
+e^{-i\mathbf k\cdot\mathbf R_I}
+e^{-i\mathbf G\cdot\mathbf R_I}
+\beta_i(\mathbf k+\mathbf G).
+\label{eq:full_der_g}
+\end{align}
+The second term in Eq.~\eqref{eq:full_der_g} is explicitly proportional
+to the atomic position $R_{I,\mu}$. This contribution originates from
+the derivative of the global phase
+\begin{equation}
+e^{-i\mathbf k\cdot\mathbf R_I}.
+\end{equation}
+It is not associated with the intrinsic spatial dependence of the
+localized projector, but only with the absolute position of its center.
+
+This term is undesirable for the GIPAW/converse expression, because the
+operator entering the commutator is $\mathbf r-\mathbf R_I$, not
+$\mathbf r$. Equivalently, the derivative must be insensitive to an
+arbitrary global phase attached to the atomic center. Keeping the
+full phase would introduce an origin-dependent contribution proportional
+to $\mathbf R_I$.
+
+\subsection{No-phase projector}
+
+To remove this spurious contribution, one defines the no-phase projector
+by dropping the factor $e^{-i\mathbf k\cdot\mathbf R_I}$ from
+Eq.~\eqref{eq:beta_full_g_sep}. In reciprocal space, the no-phase
+projector is therefore
+\begin{equation}
+\widetilde{\beta}_{i}^{\mathbf k,I}(\mathbf G)
+=
+e^{-i\mathbf G\cdot\mathbf R_I}
+\beta_i(\mathbf k+\mathbf G).
+\label{eq:beta_no_phase_g}
+\end{equation}
+This is the object constructed by the no-phase version of the KB
+projector initialization. In the code, the factor
+$e^{-i\mathbf G\cdot\mathbf R_I}$ is the structure factor associated
+with the reciprocal lattice vector $\mathbf G$, whereas the phase
+$e^{-i\mathbf k\cdot\mathbf R_I}$ is deliberately omitted.
+
+Taking the derivative of Eq.~\eqref{eq:beta_no_phase_g} gives
+\begin{equation}
+\partial_{k_\mu}
+\widetilde{\beta}_{i}^{\mathbf k,I}(\mathbf G)
+=
+e^{-i\mathbf G\cdot\mathbf R_I}
+\partial_{k_\mu}\beta_i(\mathbf k+\mathbf G).
+\label{eq:no_phase_der_g}
+\end{equation}
+Unlike Eq.~\eqref{eq:full_der_g}, there is no term proportional to
+$R_{I,\mu}$. Thus, the derivative acts only on the intrinsic dependence
+of the projector on $\mathbf k+\mathbf G$.
+
+\subsection{Real-space reconstruction of the no-phase projector}
+
+We now show explicitly that the no-phase reciprocal-space definition
+corresponds to a real-space projector whose $k$-derivative generates
+the relative coordinate $\mathbf r-\mathbf R_I$.
+
+The inverse plane-wave expansion of Eq.~\eqref{eq:beta_no_phase_g} is
+\begin{equation}
+\widetilde{\beta}_{i}^{\mathbf k,I}(\mathbf r)
+=
+\frac{1}{\sqrt{\Omega}}
+\sum_{\mathbf G}
+\widetilde{\beta}_{i}^{\mathbf k,I}(\mathbf G)
+e^{i\mathbf G\cdot\mathbf r},
+\label{eq:inverse_pw_no_phase}
+\end{equation}
+where $\Omega$ is the cell volume. Substituting
+Eq.~\eqref{eq:beta_no_phase_g}, one obtains
+\begin{align}
+\widetilde{\beta}_{i}^{\mathbf k,I}(\mathbf r)
+&=
+\frac{1}{\sqrt{\Omega}}
+\sum_{\mathbf G}
+e^{-i\mathbf G\cdot\mathbf R_I}
+\beta_i(\mathbf k+\mathbf G)
+e^{i\mathbf G\cdot\mathbf r}
+\nonumber\\
+&=
+\frac{1}{\sqrt{\Omega}}
+\sum_{\mathbf G}
+\beta_i(\mathbf k+\mathbf G)
+e^{i\mathbf G\cdot(\mathbf r-\mathbf R_I)} .
+\label{eq:no_phase_real_sum}
+\end{align}
+Using the local coordinate
+$\boldsymbol{\rho}_I=\mathbf r-\mathbf R_I$, this becomes
+\begin{equation}
+\widetilde{\beta}_{i}^{\mathbf k,I}(\mathbf r)
+=
+\frac{1}{\sqrt{\Omega}}
+\sum_{\mathbf G}
+\beta_i(\mathbf k+\mathbf G)
+e^{i\mathbf G\cdot\boldsymbol{\rho}_I}.
+\label{eq:no_phase_real_rho}
+\end{equation}
+
+The quantity $\beta_i(\mathbf k+\mathbf G)$ is the Fourier coefficient
+of the localized function multiplied by the Bloch phase relative to the
+atomic center. Hence Eq.~\eqref{eq:no_phase_real_rho} is the
+plane-wave representation of
+\begin{equation}
+\widetilde{\beta}_{i}^{\mathbf k,I}(\mathbf r)
+=
+e^{-i\mathbf k\cdot(\mathbf r-\mathbf R_I)}
+\beta_i(\mathbf r-\mathbf R_I),
+\label{eq:no_phase_real_final}
+\end{equation}
+up to the usual periodic repetition implied by the plane-wave
+representation.
+
+Taking the derivative of Eq.~\eqref{eq:no_phase_real_final} gives
+\begin{align}
+\partial_{k_\mu}
+\widetilde{\beta}_{i}^{\mathbf k,I}(\mathbf r)
+&=
+\partial_{k_\mu}
+\left[
+e^{-i\mathbf k\cdot(\mathbf r-\mathbf R_I)}
+\beta_i(\mathbf r-\mathbf R_I)
+\right]
+\nonumber\\
+&=
+-i(r_\mu-R_{I,\mu})
+e^{-i\mathbf k\cdot(\mathbf r-\mathbf R_I)}
+\beta_i(\mathbf r-\mathbf R_I)
+\nonumber\\
+&=
+-i(r_\mu-R_{I,\mu})
+\widetilde{\beta}_{i}^{\mathbf k,I}(\mathbf r)
+\nonumber\\
+&=
+-i\rho_{I,\mu}
+\widetilde{\beta}_{i}^{\mathbf k,I}(\mathbf r).
+\label{eq:no_phase_der_real}
+\end{align}
+Therefore,
+\begin{equation}
+(r_\mu-R_{I,\mu})
+\widetilde{\beta}_{i}^{\mathbf k,I}(\mathbf r)
+=
+i\,
+\partial_{k_\mu}
+\widetilde{\beta}_{i}^{\mathbf k,I}(\mathbf r).
+\label{eq:rho_der_identity}
+\end{equation}
+
+Equation~\eqref{eq:rho_der_identity} is the identity required in the
+GIPAW/converse derivation. It shows that the no-phase derivative
+generates the relative position operator with respect to the atomic
+center.
+
+\subsection{No-phase convention for Hubbard projectors}
+\label{app:hubbard_no_phase}
+
+The same phase convention must be used for the Hubbard projectors. Let
+$\phi_{Im}$ be a localized Hubbard orbital centered on atom $I$. In
+reciprocal space, the full-phase Hubbard projector has the same
+translation structure as a KB projector:
+\begin{equation}
+\phi^{\mathbf k,I}_{m,\mathrm{full}}(\mathbf G)
+=
+e^{-i(\mathbf k+\mathbf G)\cdot\mathbf R_I}
+\phi_m(\mathbf k+\mathbf G).
+\end{equation}
+Separating the phase associated with the atomic center gives
+\begin{equation}
+\phi^{\mathbf k,I}_{m,\mathrm{full}}(\mathbf G)
+=
+e^{-i\mathbf k\cdot\mathbf R_I}
+e^{-i\mathbf G\cdot\mathbf R_I}
+\phi_m(\mathbf k+\mathbf G).
+\end{equation}
+The factor $e^{-i\mathbf G\cdot\mathbf R_I}$ must be retained, because
+it places the localized orbital on atom $I$. By contrast, the factor
+$e^{-i\mathbf k\cdot\mathbf R_I}$ is a global, $k$-dependent phase
+associated with the position of the atomic center. If differentiated
+with respect to $\mathbf k$, it generates an additional term
+proportional to $\mathbf R_I$.
+
+Therefore we define the no-phase Hubbard projector as
+\begin{equation}
+\widetilde{\phi}^{\mathbf k,I}_{m}(\mathbf G)
+=
+e^{+i\mathbf k\cdot\mathbf R_I}
+\phi^{\mathbf k,I}_{m,\mathrm{full}}(\mathbf G),
+\end{equation}
+or equivalently
+\begin{equation}
+\widetilde{\phi}^{\mathbf k,I}_{m}(\mathbf G)
+=
+e^{-i\mathbf G\cdot\mathbf R_I}
+\phi_m(\mathbf k+\mathbf G).
+\end{equation}
+
+With this definition, the inverse plane-wave expansion gives the
+cell-periodic projector
+\begin{equation}
+\widetilde{\phi}^{\mathbf k,I}_{m}(\mathbf r)
+=
+e^{-i\mathbf k\cdot(\mathbf r-\mathbf R_I)}
+\phi_m(\mathbf r-\mathbf R_I),
+\end{equation}
+up to the periodic repetition implied by the plane-wave representation.
+Consequently,
+\begin{equation}
+\partial_{k_\mu}
+\widetilde{\phi}^{\mathbf k,I}_{m}(\mathbf r)
+=
+-i(r_\mu-R_{I,\mu})
+\widetilde{\phi}^{\mathbf k,I}_{m}(\mathbf r).
+\end{equation}
+Thus,
+\begin{equation}
+(r_\mu-R_{I,\mu})
+\widetilde{\phi}^{\mathbf k,I}_{m}
+=
+i\,\partial_{k_\mu}
+\widetilde{\phi}^{\mathbf k,I}_{m}.
+\end{equation}
+
+This is the same identity used for the no-phase KB projectors. Therefore,
+when the Hubbard contribution is written in terms of
+$\partial_{\mathbf k}\phi_{Im}^{\mathbf k}$, the derivative must be
+taken on the no-phase Hubbard projectors. Otherwise the derivative would
+also act on the global phase $e^{-i\mathbf k\cdot\mathbf R_I}$ and would
+produce a spurious contribution proportional to $R_{I,\mu}$.
+
+
+\end{document}
+
+
+
