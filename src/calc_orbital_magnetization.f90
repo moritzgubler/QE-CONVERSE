@@ -20,7 +20,7 @@
   USE gipaw_module,          ONLY : lambda_so, dudk_method, lhub_magnetization
   USE paw_gipaw,             ONLY : paw_vkb, paw_nkb, paw_becp
   USE ener,                  ONLY : ef
-  USE ldaU,                 ONLY : lda_plus_u, wfcU, Hubbard_projectors, nwfcU
+  USE ldaU,                 ONLY : lda_plus_u, wfcU, Hubbard_projectors, nwfcU, lda_plus_u_kind
   USE io_files,             ONLY : nwordwfcU, iunhub
   USE buffers,               ONLY : get_buffer
   USE scf,                   ONLY : vrs
@@ -96,7 +96,8 @@
   call allocate_bec_type(nkb, nbnd, becp)
   allocate(dbecp(nkb,nbnd,3), paw_dbecp(paw_nkb,nbnd,3))
   allocate(vkb_save(npwx,nkb), aux(nkb,nbnd))
-  if (lhub_magnetization .and. lda_plus_u .and. Hubbard_projectors /= 'pseudo') &
+  if (lhub_magnetization .and. lda_plus_u .and. lda_plus_u_kind /= 2 .and. &
+      Hubbard_projectors /= 'pseudo') &
     allocate(dhubbecp(nwfcU,nbnd,3))
 #define __USE_BARRIER
 
@@ -133,7 +134,8 @@
 
     call compute_dbecp  ! for deltaM bare (KB pseudopotential)
     call compute_paw_dbecp ! for delta_M_para_so
-    if (lhub_magnetization .and. lda_plus_u .and. Hubbard_projectors /= 'pseudo') call compute_dhubbecp
+    if (lhub_magnetization .and. lda_plus_u .and. lda_plus_u_kind /= 2 .and. &
+        Hubbard_projectors /= 'pseudo') call compute_dhubbecp
 
     ! loop over the magnetization directions
     do kk =  1, 3
@@ -176,7 +178,8 @@
       enddo
      ! compute the GIPAW corrections
       call calc_delta_M_bare
-      if (lhub_magnetization .and. lda_plus_u .and. Hubbard_projectors /= 'pseudo') call calc_delta_M_hub
+      if (lhub_magnetization .and. lda_plus_u .and. lda_plus_u_kind /= 2 .and. &
+          Hubbard_projectors /= 'pseudo') call calc_delta_M_hub
       if (any(lambda_so /= 0.d0)) call calc_delta_M_para_so
       if (any(m_0 /= 0.d0))       call calc_delta_M_para_nmr
     enddo ! kk
