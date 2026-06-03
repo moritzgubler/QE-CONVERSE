@@ -136,6 +136,10 @@ SUBROUTINE calc_efg()
   ! --- spectroscopic parameters ---
   write(stdout,*)
   write(stdout,'(5X,A)') 'NMR/NQR QUADRUPOLAR PARAMETERS:'
+  write(stdout,'(5X,A)') 'Vxx, Vyy, Vzz: EFG principal values (Ha/bohr^2), ordered |Vzz|>=|Vyy|>=|Vxx|'
+  write(stdout,'(5X,A)') 'axis: corresponding eigenvectors in Cartesian crystal coordinates (a,b,c)'
+  write(stdout,'(5X,A)') 'Q: nuclear quadrupole moment (input, 1e-30 m^2)'
+  write(stdout,'(5X,A)') 'Cq = e*Q*Vzz/h (MHz),  eta = (Vxx-Vyy)/Vzz'
   write(stdout,*)
 
   do na = 1, nat
@@ -199,6 +203,7 @@ SUBROUTINE print_efg_summary()
 
   write(stdout,*)
   write(stdout,'(5X,A)') '=========== NMR/NQR QUADRUPOLAR PARAMETERS ==========='
+  write(stdout,'(5X,A)') 'Cq = e*Q*Vzz/h (MHz),  eta = (Vxx-Vyy)/Vzz,  Q: input nuclear quadrupole moment (1e-30 m^2)'
   write(stdout,*)
 
   do na = 1, nat
