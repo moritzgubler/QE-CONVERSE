@@ -594,7 +594,7 @@
               ! Part A: derivative-derivative
               tmp_A = tmp_A + wg(jbnd_h,ik) * v_nsg(m1,m2,viz,na1,current_spin) * &
                       conjg(dhubbecp(ihubst1,jbnd_h,ii)) * dhubbecp(ihubst2,jbnd_h,jj)
-              ! Part B: derivative-overlap (full Levi-Civita: d_jj*F(ii) - d_ii*F(jj))
+              ! Part B: derivative-overlap, cyclic pair: d_jj*conjg(dhubbecp(ii)) - d_ii*conjg(dhubbecp(jj))
               prod_ii = conjg(dhubbecp(ihubst1,jbnd_h,ii)) * hubbecp_0(ihubst2,jbnd_h)
               prod_jj = conjg(dhubbecp(ihubst1,jbnd_h,jj)) * hubbecp_0(ihubst2,jbnd_h)
               tmp_B = tmp_B + wg(jbnd_h,ik) * v_nsg(m1,m2,viz,na1,current_spin) * &
