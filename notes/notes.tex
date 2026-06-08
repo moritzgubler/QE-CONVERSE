@@ -847,6 +847,32 @@ O & 3 & 343.03 & 230.67 \\
 \end{tabular}
 \end{table}
 
+\begin{table}[h]
+\centering
+\caption{Full NMR shielding tensor components and isotropic shieldings (ppm) for all atoms in LiCoO$_2$ at the DFT+$U$+$V$ level, computed with QE-CONVERSE. $\sigma_\text{iso} = (\sigma_{xx}+\sigma_{yy}+\sigma_{zz})/3$.}
+\label{tab:licoo2_dftu_shielding_full}
+\begin{tabular}{lrrrr}
+\hline
+Atom & $\sigma_{xx}$ & $\sigma_{yy}$ & $\sigma_{zz}$ & $\sigma_\text{iso}$ \\
+\hline
+Co 1 & $-4982.31$ & $-4982.89$ & $-5367.68$ & $-5110.96$ \\
+Co 2 & $-4982.80$ & $-4983.56$ & $-5367.89$ & $-5111.41$ \\
+Co 3 & $-4982.26$ & $-4982.93$ & $-5367.91$ & $-5111.03$ \\
+\hline
+O 4  & $66.37$    & $66.26$    & $65.90$    & $66.18$    \\
+O 5  & $66.69$    & $66.42$    & $66.15$    & $66.42$    \\
+O 6  & $66.37$    & $66.30$    & $66.20$    & $66.29$    \\
+O 7  & $66.33$    & $66.32$    & $66.19$    & $66.28$    \\
+O 8  & $66.65$    & $66.49$    & $66.06$    & $66.40$    \\
+O 9  & $66.39$    & $66.14$    & $65.94$    & $66.16$    \\
+\hline
+Li 10 & $88.41$   & $88.27$    & $82.43$    & $86.37$    \\
+Li 11 & $88.27$   & $88.23$    & $82.61$    & $86.37$    \\
+Li 12 & $88.24$   & $88.24$    & $82.65$    & $86.38$    \\
+\hline
+\end{tabular}
+\end{table}
+
 \newpage
 \clearpage
 
@@ -878,7 +904,7 @@ where $I$ and $J$ index atomic sites, $m$ and $m'$ denote magnetic quantum numbe
     \label{eq:occ_matrix_0}
 \end{equation}
 %
-where $v$ and $\sigma$ label bands and spin, $\mathbf{k}$ runs over the first Brillouin zone (BZ), and $f^\sigma_{v,\mathbf{k}}$ are the KS occupations. In Eq.~\eqref{eq:occ_matrix_0}, $m \in I$ and $m' \in J$, meaning that $m$ runs over the magnetic quantum numbers associated with a fixed principal quantum number $n$ and orbital angular momentum $l$ of atom $I$, and analogously $m'$ for atom $J$. The corresponding generalized KS equation can be written as~\cite{Campo:2010},
+where $v$ and $\sigma$ label bands and spin, $\mathbf{k}$ runs over the first Brillouin zone (BZ), and $f^\sigma_{v,\mathbf{k}}$ are the KS occupations. In Eq.~\eqref{eq:occ_matrix_0}, $m \in I$ and $m' \in J$, meaning that $m$ runs over the magnetic quantum numbers associated with a fixed principal quantum number $n$ and orbital angular momentum $l$ of atom $I$, and analogously $m'$ for atom $J$. The corresponding generalized KS equation can be written as,
 %
 \begin{equation}
      \left(\hat{\mathcal H}_\mathrm{KS}^\sigma +
@@ -886,7 +912,7 @@ where $v$ and $\sigma$ label bands and spin, $\mathbf{k}$ runs over the first Br
      = \varepsilon_{v,{\bf k}}^\sigma |\psi_{v,{\bf k}}^\sigma\rangle,
 \end{equation}
 %
-where $\hat{\mathcal H}_\mathrm{KS}^\sigma$ is the KS Hamiltonian of the standard DFT, $\varepsilon_{v,{\bf k}}^\sigma$ is the $v$-th band energy at momentum ${\bf k}$ and spin $\sigma$, and $\hat{\mathcal V}_{U+V}^\sigma$ is the Hubbard potential that is derived from the Hubbard energy~\eqref{eq:Edftu} and which reads~\cite{Timrov:2021}:
+where $\hat{\mathcal H}_\mathrm{KS}^\sigma$ is the KS Hamiltonian of the standard DFT, $\varepsilon_{v,{\bf k}}^\sigma$ is the $v$-th band energy at momentum ${\bf k}$ and spin $\sigma$, and $\hat{\mathcal V}_{U+V}^\sigma$ is the Hubbard potential that is derived from the Hubbard energy~\eqref{eq:Edftu} and which reads:
 %
 \begin{eqnarray} 
 \hat{\mathcal V}_{U+V}^\sigma & = &
@@ -1493,9 +1519,6 @@ taken on the no-phase Hubbard projectors. Otherwise the derivative would
 also act on the global phase $e^{-i\mathbf k\cdot\mathbf R_I}$ and would
 produce a spurious contribution proportional to $R_{I,\mu}$.
 
-
-\bibliographystyle{unsrt}
-\bibliography{notes}
 
 \end{document}
 
