@@ -66,10 +66,10 @@ SUBROUTINE newscf
   lmovecell=.false.
   iprint=10000
 !  read wfc and potential from preav scf. Generally is not suggested
-!  starting_wfc='file'  ! read wfc from preav. scf
-!  starting_pot='file'  ! read potential from preav scf
+ starting_wfc='atomic'  ! read wfc from preav. scf
+ starting_pot='file'  ! read potential from preav scf
 ! Initialization of wfc
-  starting_wfc='atomic'
+  ! starting_wfc='atomic'
   report=0
   CALL check_stop_init()
   CALL setup_para ( dfftp%nr3, 1, nbnd )
