@@ -17,9 +17,10 @@ PROGRAM qe_efg
   ! Input namelist: &input_qeefg
   !   prefix    : must match the pw.x SCF prefix
   !   outdir    : must match the pw.x SCF outdir
-  !   q_efg(n)  : nuclear quadrupole moment (barn) for atom type n
+  !   q_efg(n)  : nuclear quadrupole moment (1e-30 m^2 = 10 mbarn) for atom type n
   !               (indexed as in ATOMIC_SPECIES block of pw.x input)
   !               omit or set to 0 to skip Cq for that type
+  !               NB: 1 barn = 100 (1e-30 m^2), e.g. 133Cs Q = -0.00343 b -> -0.343
   !   i_efg(n)  : nuclear spin I for atom type n (same indexing as q_efg)
   !               needed only for the quadrupolar frequency nu_Q;
   !               omit or set to <=0.5 to skip nu_Q for that type
