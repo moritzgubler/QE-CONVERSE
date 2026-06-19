@@ -74,7 +74,9 @@ PROGRAM qe_converse
                         diago_thr_init, conv_threshold, &
                         tr2, mixing_beta, assume_isolated, &
                         lambda_so, m_0, m_0_atom, delete_dudk_files, &
-                        dudk_in_memory, lhub_magnetization
+                        dudk_in_memory, lhub_magnetization, &
+                        lhyperfine, hfi_output_unit, hfi_nuclear_g_factor, &
+                        core_relax_method, use_rt_avg, core_relax_r_max
 
 ! begin with the initialization part                
 #if defined(__MPI)
@@ -107,6 +109,12 @@ if (.not. ionode .or. my_image_id > 0) goto 400
   delete_dudk_files = .false.
   dudk_in_memory = .false.
   lhub_magnetization = .true.
+  lhyperfine = .false.
+  hfi_output_unit = 'MHz'
+  hfi_nuclear_g_factor(:) = 1.d0
+  core_relax_method = 1
+  use_rt_avg = .true.
+  core_relax_r_max = 5.d0
 
     read ( 5, input_qeconverse, iostat = ios )
   tmp_dir = outdir
@@ -150,14 +158,20 @@ if (.not. ionode .or. my_image_id > 0) goto 400
   !read ground state wavefunctions  
   CALL read_file ( )
   call stop_clock ('read_file')
+  if (lhyperfine) job = 'hyperfine'
   call gipaw_setup ( )
-  if (any(m_0 /= 0.d0)) then
+  if (any(m_0 /= 0.d0) .and. .not. lhyperfine) then
      call init_nmr
   endif
 
   call newscf
 
-  call calc_orbital_magnetization ( )
+  if (lhyperfine) then
+     ! Knight shift: Fermi-contact hyperfine on the spin-polarized ground state
+     call hyperfine
+  else
+     call calc_orbital_magnetization ( )
+  endif
 
   if ( lda_plus_u ) call close_buffer(iunhub, 'DELETE')
 
@@ -208,6 +222,12 @@ SUBROUTINE gipaw_bcast_input
   call mp_bcast ( delete_dudk_files, root, world_comm )
   call mp_bcast ( dudk_in_memory, root, world_comm )
   call mp_bcast ( lhub_magnetization, root, world_comm )
+  call mp_bcast ( lhyperfine, root, world_comm )
+  call mp_bcast ( hfi_output_unit, root, world_comm )
+  call mp_bcast ( hfi_nuclear_g_factor, root, world_comm )
+  call mp_bcast ( core_relax_method, root, world_comm )
+  call mp_bcast ( use_rt_avg, root, world_comm )
+  call mp_bcast ( core_relax_r_max, root, world_comm )
 
 
 END SUBROUTINE gipaw_bcast_input

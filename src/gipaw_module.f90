@@ -82,6 +82,16 @@ MODULE gipaw_module
  
   ! core-relax method to calculate change of XC
   INTEGER :: core_relax_method = 1
+
+  ! Knight shift / Fermi-contact hyperfine:
+  !   lhyperfine       : if true, compute the Fermi-contact hyperfine (Knight shift)
+  !                      instead of the orbital magnetization
+  !   use_rt_avg       : average the contact density over the Thomson sphere
+  !                      r_T = Z*alpha^2 (more robust for metals/heavy nuclei)
+  !   core_relax_r_max : max core radius (bohr) for the core-relaxation integral
+  LOGICAL  :: lhyperfine = .false.
+  LOGICAL  :: use_rt_avg = .true.
+  REAL(DP) :: core_relax_r_max = 5.0_dp
  
   ! format for a rank-2 tensor
   CHARACTER(*), PARAMETER :: tens_fmt = '(3(5X,3(F14.4,2X)/))'

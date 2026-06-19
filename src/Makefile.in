@@ -24,6 +24,9 @@ MODFLAGS = $(BASEMOD_FLAGS) \
 
 CONVERSE_OBJS = electrons_gipaw.o \
 		set_dvrs.o \
+                hyperfine.o \
+                core_relax.o \
+                lschps.o \
                 c_bands_gipaw.o \
                 h_psi_gipaw.o \
                 stop_code.o \
