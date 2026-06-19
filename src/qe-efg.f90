@@ -20,8 +20,11 @@ PROGRAM qe_efg
   !   q_efg(n)  : nuclear quadrupole moment (barn) for atom type n
   !               (indexed as in ATOMIC_SPECIES block of pw.x input)
   !               omit or set to 0 to skip Cq for that type
+  !   i_efg(n)  : nuclear spin I for atom type n (same indexing as q_efg)
+  !               needed only for the quadrupolar frequency nu_Q;
+  !               omit or set to <=0.5 to skip nu_Q for that type
   !
-  USE gipaw_module,  ONLY : q_efg
+  USE gipaw_module,  ONLY : q_efg, i_efg
   USE constants,     ONLY : eps12
   USE environment,   ONLY : environment_start, environment_end
   USE io_files,      ONLY : prefix, tmp_dir
@@ -40,7 +43,7 @@ PROGRAM qe_efg
   character(len=256), external :: trimcheck
   integer :: ios
 
-  NAMELIST / input_qeefg / prefix, outdir, q_efg
+  NAMELIST / input_qeefg / prefix, outdir, q_efg, i_efg
 
 #if defined(__MPI)
   call mp_startup(start_images=.true., images_only=.false.)
@@ -58,6 +61,7 @@ PROGRAM qe_efg
   CALL get_environment_variable('ESPRESSO_TMPDIR', outdir)
   IF (TRIM(outdir) == ' ') outdir = './'
   q_efg(:) = 0.d0
+  i_efg(:) = 0.d0
 
   read(5, input_qeefg, iostat=ios)
   tmp_dir = trimcheck(outdir)
@@ -68,6 +72,7 @@ PROGRAM qe_efg
   CALL mp_bcast(tmp_dir, 0, world_comm)
   CALL mp_bcast(prefix,  0, world_comm)
   CALL mp_bcast(q_efg,   0, world_comm)
+  CALL mp_bcast(i_efg,   0, world_comm)
 #endif
 
   io_level   = 1

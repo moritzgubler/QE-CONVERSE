@@ -31,7 +31,7 @@ SUBROUTINE calc_efg()
   USE ions_base,     ONLY : nat, atm, ityp, zv
   USE symme,         ONLY : symtensor
   USE mp,            ONLY : mp_sum
-  USE gipaw_module,  ONLY : q_efg
+  USE gipaw_module,  ONLY : q_efg, i_efg
   USE io_files,      ONLY : iunwfc, nwordwfc
   USE control_flags, ONLY : io_level
   USE buffers,       ONLY : open_buffer, close_buffer
@@ -45,7 +45,7 @@ SUBROUTINE calc_efg()
   real(dp), allocatable :: zion(:)
   complex(dp), allocatable :: tmp(:,:,:)
   integer :: alpha, beta, na
-  real(dp) :: v(3), axis(3,3), eta, Cq
+  real(dp) :: v(3), axis(3,3), eta, Cq, spinI, denom, nu_Q
   logical :: exst
 
   write(stdout,*)
@@ -138,8 +138,9 @@ SUBROUTINE calc_efg()
   write(stdout,'(5X,A)') 'NMR/NQR QUADRUPOLAR PARAMETERS:'
   write(stdout,'(5X,A)') 'Vxx, Vyy, Vzz: EFG principal values (Ha/bohr^2), ordered |Vzz|>=|Vyy|>=|Vxx|'
   write(stdout,'(5X,A)') 'axis: corresponding eigenvectors in Cartesian crystal coordinates (a,b,c)'
-  write(stdout,'(5X,A)') 'Q: nuclear quadrupole moment (input, 1e-30 m^2)'
+  write(stdout,'(5X,A)') 'Q: nuclear quadrupole moment (input, 1e-30 m^2),  I: nuclear spin (input)'
   write(stdout,'(5X,A)') 'Cq = e*Q*Vzz/h (MHz),  eta = (Vxx-Vyy)/Vzz'
+  write(stdout,'(5X,A)') 'nu_Q = 3*e*Q*Vzz / (2I(2I-1)h) = 3*Cq / (2I(2I-1))  (MHz)'
   write(stdout,*)
 
   do na = 1, nat
@@ -167,6 +168,15 @@ SUBROUTINE calc_efg()
             'Q=', q_efg(ityp(na)), ' 1e-30 m^2', &
             'Cq=', Cq, ' MHz', &
             'eta=', eta
+
+      ! quadrupolar frequency nu_Q (defined only for I >= 1)
+      spinI = i_efg(ityp(na))
+      denom = 2.d0 * spinI * (2.d0 * spinI - 1.d0)
+      if (denom > 1d-10) then
+        nu_Q = 3.d0 * Cq / denom
+        write(stdout,'(5X,A,I3,2X,A,F6.1,4X,A,F12.4,A)') &
+              atm(ityp(na)), na, 'I=', spinI, 'nu_Q=', nu_Q, ' MHz'
+      endif
     else
       write(stdout,'(5X,A,I3,2X,A,F8.5)') atm(ityp(na)), na, 'eta=', eta
     endif
@@ -192,18 +202,19 @@ SUBROUTINE print_efg_summary()
   USE io_global,    ONLY : stdout
   USE constants,    ONLY : angstrom_au, rytoev, electronvolt_si
   USE ions_base,    ONLY : nat, atm, ityp
-  USE gipaw_module, ONLY : q_efg
+  USE gipaw_module, ONLY : q_efg, i_efg
   USE efg_mod,      ONLY : efg_tensor
 
   IMPLICIT NONE
   integer :: na
-  real(dp) :: v(3), axis(3,3), eta, Cq
+  real(dp) :: v(3), axis(3,3), eta, Cq, spinI, denom, nu_Q
 
   if (.not. allocated(efg_tensor)) return
 
   write(stdout,*)
   write(stdout,'(5X,A)') '=========== NMR/NQR QUADRUPOLAR PARAMETERS ==========='
   write(stdout,'(5X,A)') 'Cq = e*Q*Vzz/h (MHz),  eta = (Vxx-Vyy)/Vzz,  Q: input nuclear quadrupole moment (1e-30 m^2)'
+  write(stdout,'(5X,A)') 'nu_Q = 3*Cq / (2I(2I-1))  (MHz),  I: input nuclear spin (printed when I >= 1)'
   write(stdout,*)
 
   do na = 1, nat
@@ -214,10 +225,21 @@ SUBROUTINE print_efg_summary()
     if (abs(q_efg(ityp(na))) > 1d-10) then
       Cq = v(3) * q_efg(ityp(na)) * rytoev * 2.d0 * angstrom_au**2 &
            * electronvolt_si * 1.d18 / 6.62620d0
-      write(stdout,'(5X,A,I3,2X,A,F10.4,A,2X,A,F12.4,A,2X,A,F8.5)') &
-            atm(ityp(na)), na, &
-            'Q=', q_efg(ityp(na)), ' 1e-30 m^2', &
-            'Cq=', Cq, ' MHz', 'eta=', eta
+      spinI = i_efg(ityp(na))
+      denom = 2.d0 * spinI * (2.d0 * spinI - 1.d0)
+      if (denom > 1d-10) then
+        nu_Q = 3.d0 * Cq / denom
+        write(stdout,'(5X,A,I3,2X,A,F10.4,A,2X,A,F12.4,A,2X,A,F8.5,2X,A,F6.1,2X,A,F12.4,A)') &
+              atm(ityp(na)), na, &
+              'Q=', q_efg(ityp(na)), ' 1e-30 m^2', &
+              'Cq=', Cq, ' MHz', 'eta=', eta, &
+              'I=', spinI, 'nu_Q=', nu_Q, ' MHz'
+      else
+        write(stdout,'(5X,A,I3,2X,A,F10.4,A,2X,A,F12.4,A,2X,A,F8.5)') &
+              atm(ityp(na)), na, &
+              'Q=', q_efg(ityp(na)), ' 1e-30 m^2', &
+              'Cq=', Cq, ' MHz', 'eta=', eta
+      endif
     else
       write(stdout,'(5X,A,I3,2X,A,F10.4,4X,A,F8.5)') &
             atm(ityp(na)), na, 'Vzz=', v(3), 'eta=', eta
