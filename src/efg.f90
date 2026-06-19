@@ -138,9 +138,10 @@ SUBROUTINE calc_efg()
   write(stdout,'(5X,A)') 'NMR/NQR QUADRUPOLAR PARAMETERS:'
   write(stdout,'(5X,A)') 'Vxx, Vyy, Vzz: EFG principal values (Ha/bohr^2), ordered |Vzz|>=|Vyy|>=|Vxx|'
   write(stdout,'(5X,A)') 'axis: corresponding eigenvectors in Cartesian crystal coordinates (a,b,c)'
-  write(stdout,'(5X,A)') 'Q: nuclear quadrupole moment (input, 1e-30 m^2),  I: nuclear spin (input)'
-  write(stdout,'(5X,A)') 'Cq = e*Q*Vzz/h (MHz),  eta = (Vxx-Vyy)/Vzz'
-  write(stdout,'(5X,A)') 'nu_Q = 3*e*Q*Vzz / (2I(2I-1)h) = 3*Cq / (2I(2I-1))  (MHz)'
+  write(stdout,'(5X,A)') 'Q: nuclear quadrupole moment (input, barn),  I: nuclear spin (input)'
+  write(stdout,'(5X,A)') 'Phi_zz = Vzz (largest |eigenvalue| of EFG)'
+  write(stdout,'(5X,A)') 'Cq = e*Q*Phi_zz/h (MHz),  eta = (Vxx-Vyy)/Vzz'
+  write(stdout,'(5X,A)') 'nu_Q = 3*e*Q*Phi_zz / (2I(2I-1)h) = 3*Cq / (2I(2I-1))  (MHz)'
   write(stdout,*)
 
   do na = 1, nat
@@ -157,19 +158,21 @@ SUBROUTINE calc_efg()
     if (abs(v(3)) > 1d-5) eta = (v(1) - v(2)) / v(3)
 
     if (abs(q_efg(ityp(na))) > 1d-10) then
-      ! Cq [MHz] = e * Q [m^2] * V_ZZ [V/m^2] / h
-      ! V_ZZ [Ha/bohr^2] -> V/m^2: multiply by rytoev*2 (Ha->eV->V) / (angstrom_au*1e-10)^2
-      ! Q [10^-30 m^2]: multiply by 1e-30
-      ! h = 6.62620e-34 J*s, Cq [MHz] = ... * 1e-6
-      Cq = v(3) * q_efg(ityp(na)) * rytoev * 2.d0 * angstrom_au**2 &
-           * electronvolt_si * 1.d18 / 6.62620d0
+      ! Cq [MHz] = e * Q [m^2] * Phi_zz [V/m^2] / h
+      !   Phi_zz [Ha/bohr^2] -> V/m^2 : * rytoev*2 (Ha->eV) / (angstrom_au*1e-10)^2 (bohr^2->m^2)
+      !   Q [barn] -> m^2             : * 1e-28
+      !   e (eV->J) = electronvolt_si ;  h = 6.62620e-34 J*s ;  Hz -> MHz : * 1e-6
+      ! Numerically Cq[MHz] = 234.96 * Q[barn] * Phi_zz[a.u.]
+      Cq = v(3) * q_efg(ityp(na)) * rytoev * 2.d0 / (angstrom_au*1.d-10)**2 &
+           * electronvolt_si * 1.d-28 / 6.62620d-34 * 1.d-6
       write(stdout,'(5X,A,I3,2X,A,F10.4,A,2X,A,F12.4,A,2X,A,F8.5)') &
             atm(ityp(na)), na, &
-            'Q=', q_efg(ityp(na)), ' 1e-30 m^2', &
+            'Q=', q_efg(ityp(na)), ' barn', &
             'Cq=', Cq, ' MHz', &
             'eta=', eta
 
-      ! quadrupolar frequency nu_Q (defined only for I >= 1)
+      ! quadrupolar frequency nu_Q = 3*e*Q*Phi_zz/(2I(2I-1)h) = 3*Cq/(2I(2I-1))
+      ! (Phi_zz = Vzz = v(3) is carried inside Cq); defined only for I >= 1
       spinI = i_efg(ityp(na))
       denom = 2.d0 * spinI * (2.d0 * spinI - 1.d0)
       if (denom > 1d-10) then
@@ -213,8 +216,9 @@ SUBROUTINE print_efg_summary()
 
   write(stdout,*)
   write(stdout,'(5X,A)') '=========== NMR/NQR QUADRUPOLAR PARAMETERS ==========='
-  write(stdout,'(5X,A)') 'Cq = e*Q*Vzz/h (MHz),  eta = (Vxx-Vyy)/Vzz,  Q: input nuclear quadrupole moment (1e-30 m^2)'
-  write(stdout,'(5X,A)') 'nu_Q = 3*Cq / (2I(2I-1))  (MHz),  I: input nuclear spin (printed when I >= 1)'
+  write(stdout,'(5X,A)') 'Phi_zz = Vzz (largest |eigenvalue| of EFG);  Q: input quadrupole moment (barn)'
+  write(stdout,'(5X,A)') 'Cq = e*Q*Phi_zz/h (MHz),  eta = (Vxx-Vyy)/Vzz'
+  write(stdout,'(5X,A)') 'nu_Q = 3*e*Q*Phi_zz / (2I(2I-1)h) = 3*Cq / (2I(2I-1))  (MHz),  I: nuclear spin (nu_Q printed when I >= 1)'
   write(stdout,*)
 
   do na = 1, nat
@@ -223,21 +227,22 @@ SUBROUTINE print_efg_summary()
     if (abs(v(3)) > 1d-5) eta = (v(1) - v(2)) / v(3)
 
     if (abs(q_efg(ityp(na))) > 1d-10) then
-      Cq = v(3) * q_efg(ityp(na)) * rytoev * 2.d0 * angstrom_au**2 &
-           * electronvolt_si * 1.d18 / 6.62620d0
+      ! Cq[MHz] = 234.96 * Q[barn] * Phi_zz[a.u.]  (see calc_efg for derivation)
+      Cq = v(3) * q_efg(ityp(na)) * rytoev * 2.d0 / (angstrom_au*1.d-10)**2 &
+           * electronvolt_si * 1.d-28 / 6.62620d-34 * 1.d-6
       spinI = i_efg(ityp(na))
       denom = 2.d0 * spinI * (2.d0 * spinI - 1.d0)
       if (denom > 1d-10) then
         nu_Q = 3.d0 * Cq / denom
         write(stdout,'(5X,A,I3,2X,A,F10.4,A,2X,A,F12.4,A,2X,A,F8.5,2X,A,F6.1,2X,A,F12.4,A)') &
               atm(ityp(na)), na, &
-              'Q=', q_efg(ityp(na)), ' 1e-30 m^2', &
+              'Q=', q_efg(ityp(na)), ' barn', &
               'Cq=', Cq, ' MHz', 'eta=', eta, &
               'I=', spinI, 'nu_Q=', nu_Q, ' MHz'
       else
         write(stdout,'(5X,A,I3,2X,A,F10.4,A,2X,A,F12.4,A,2X,A,F8.5)') &
               atm(ityp(na)), na, &
-              'Q=', q_efg(ityp(na)), ' 1e-30 m^2', &
+              'Q=', q_efg(ityp(na)), ' barn', &
               'Cq=', Cq, ' MHz', 'eta=', eta
       endif
     else
