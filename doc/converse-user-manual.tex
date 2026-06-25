@@ -45,8 +45,9 @@ The QE-CONVERSE implement a non-perturbative approach (converse) to compute the 
   \item Periodic and isolated systems
   \item Norm-conserving pseudopotentials
   \item Parallelization over bands and g-vectors
-  \item NMR shielding tensors 
+  \item NMR shielding tensors
   \item EPR g-tensor
+  \item Electric field gradient (EFG) tensors and NMR/NQR quadrupolar parameters
   \item LDA and GGA functionals
 \end{itemize}
 
@@ -59,9 +60,9 @@ The QE-CONVERSE implement a non-perturbative approach (converse) to compute the 
 %===================================================================================================
 \section{Build instructions}
 %===================================================================================================
-This current version of the code is compatible with the version 7.2 of Quantum-Espresso package.
+This current version of the code is compatible with the version 7.5 of Quantum-Espresso package.
 \begin{enumerate}
-\item A Quantum-Espresso package version 7.2 must be previously installed (\url{https://gitlab.com/QEF/q-e/-/releases/qe-7.2}). To take advantage of the enhancements in linear algebra operations, the configuration with scaLAPACK package or ELPA library is suggested.
+\item A Quantum-Espresso package version 7.5 must be previously installed (\url{https://gitlab.com/QEF/q-e/-/releases/qe-7.5}). To take advantage of the enhancements in linear algebra operations, the configuration with scaLAPACK package or ELPA library is suggested.
 QE user's guide at \url{http://www.quantum-espresso.org/user_guide/user_guide.html}
 \item Type:
 \begin{verbatim}
@@ -75,7 +76,7 @@ cd QE-CONVERSE
 \item 
  Copy the source files and the Makefile from \texttt{/src/} dictory into \texttt{/PP/} directory of Quantum-Espresso.
 \item
- In the main directory of QE-7.2 type \texttt{make pp}. You should find the binary file \texttt{qe-converse.x} in the \texttt{/bin/} directory of Quantum-Espresso.
+ In the main directory of QE-7.5 type \texttt{make pp}. You should find the binary files \texttt{qe-converse.x} (NMR/EPR) and \texttt{qe-efg.x} (EFG) in the \texttt{/bin/} directory of Quantum-Espresso.
 \end{enumerate}
 %===================================================================================================
 \section{Quick start}
@@ -141,6 +142,28 @@ Description: If \texttt{.true.}, du/dk gradients (wavefunction k-derivatives) ar
 
 \end{description}
 
+
+%===================================================================================================
+\section{Electric field gradient (EFG)}
+%===================================================================================================
+The electric field gradient at each nucleus is a ground-state property and is computed by a
+separate binary, \texttt{qe-efg.x}, directly from the converged SCF charge density and
+wavefunctions (no converse SCF is needed). A single ordinary \texttt{pw.x} run is sufficient;
+symmetry may be left on. The total EFG is the sum of the bare valence, ionic (Ewald), and GIPAW
+reconstruction contributions, which are printed separately together with the principal values and
+the quadrupolar parameters $C_q$, $\eta$, and $\nu_Q$.
+
+The input is the namelist \texttt{\&input\textunderscore{}qeefg}:
+\begin{description}
+\item[prefix] (character) prefix used in the SCF \texttt{pw.x} calculation.
+\item[outdir] (character) scratch directory used in the SCF \texttt{pw.x} calculation.
+\item[q\textunderscore{}efg($n$)] (real, default $0$) nuclear quadrupole moment of atom type $n$,
+in units of $10^{-30}\,\mathrm{m}^2$ (= 10 mbarn); $C_q$ is printed only for types with a non-zero value.
+\item[i\textunderscore{}efg($n$)] (real, default $0$) nuclear spin $I$ of atom type $n$; the
+quadrupolar frequency $\nu_Q$ is printed only for types with $I \ge 1$.
+\end{description}
+Atom types are indexed as in the \texttt{ATOMIC\textunderscore{}SPECIES} block of the \texttt{pw.x}
+input. Run \texttt{pw.x} followed by \texttt{qe-efg.x} to obtain the EFG at every site.
 
 %===================================================================================================
 \section{Limitations}
