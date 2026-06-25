@@ -8,6 +8,7 @@ The QE-CONVERSE implement a non-perturbative approach (converse) to compute the 
 
 * NMR shielding tensors
 * EPR g-tensor
+* Electric field gradient (EFG) tensors and NMR/NQR quadrupolar parameters (Cq, eta, nu_Q), via the standalone `qe-efg.x` driver (a ground-state property computed directly from the SCF density)
 * It works only with Norm-conserving pseudopotential with GIPAW reconstruction (https://sites.google.com/site/dceresoli/pseudopotentials)
 * LDA and GGA functionals
 * isolated and periodic systems
@@ -21,7 +22,7 @@ The QE-CONVERSE implement a non-perturbative approach (converse) to compute the 
 6. ```make```
 7. ```make test # optionally run tests```
 ## How to use it:
-run ```./qe-converse.x```
+run ```./qe-converse.x``` for NMR shifts / EPR g-tensor, or ```./qe-efg.x``` for the electric field gradient.
 
 ## Directory contents
 
