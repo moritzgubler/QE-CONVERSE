@@ -74,7 +74,7 @@ PROGRAM qe_converse
                         diago_thr_init, conv_threshold, &
                         tr2, mixing_beta, assume_isolated, &
                         lambda_so, m_0, m_0_atom, delete_dudk_files, &
-                        dudk_in_memory, lhub_magnetization, q_efg
+                        dudk_in_memory, lhub_magnetization
 
 ! begin with the initialization part                
 #if defined(__MPI)
@@ -104,7 +104,6 @@ if (.not. ionode .or. my_image_id > 0) goto 400
   tr2 = 1e-8
   lambda_so(:) = 0.d0
   m_0(:) = 0.d0
-  q_efg(:) = 0.d0
   delete_dudk_files = .false.
   dudk_in_memory = .false.
   lhub_magnetization = .true.
@@ -152,7 +151,6 @@ if (.not. ionode .or. my_image_id > 0) goto 400
   CALL read_file ( )
   call stop_clock ('read_file')
   call gipaw_setup ( )
-  call calc_efg ( )
   if (any(m_0 /= 0.d0)) then
      call init_nmr
   endif
@@ -160,8 +158,6 @@ if (.not. ionode .or. my_image_id > 0) goto 400
   call newscf
 
   call calc_orbital_magnetization ( )
-
-  call print_efg_summary ( )
 
   if ( lda_plus_u ) call close_buffer(iunhub, 'DELETE')
 
@@ -212,7 +208,6 @@ SUBROUTINE gipaw_bcast_input
   call mp_bcast ( delete_dudk_files, root, world_comm )
   call mp_bcast ( dudk_in_memory, root, world_comm )
   call mp_bcast ( lhub_magnetization, root, world_comm )
-  call mp_bcast ( q_efg, root, world_comm )
 
 
 END SUBROUTINE gipaw_bcast_input
