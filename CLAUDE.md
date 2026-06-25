@@ -14,6 +14,8 @@ original converse routines from the obsolete PWscf 3.2 code.
 Derived properties:
 - **NMR chemical shielding tensors** (¹⁷O, ²⁹Si, ²⁷Al, …)
 - **EPR g-tensor** deviations Δg
+- **Electric field gradient (EFG) tensors** and NMR/NQR quadrupolar parameters (`Cq`, `η`, `ν_Q`),
+  via the standalone `qe-efg.x` driver (a ground-state property, no converse SCF needed)
 
 Scope: isolated molecules and periodic solids. Functionals: LDA, GGA. Pseudopotentials: GIPAW
 norm-conserving (Trouiller-Martins + GIPAW reconstruction required).
@@ -129,6 +131,47 @@ The chemical shielding tensor is:
 
 where `Ω` is the cell volume. Again three runs are needed (one per dipole direction).
 
+### Electric Field Gradient (EFG)
+
+The EFG is the traceless rank-2 tensor `V_{αβ}` (the l=2 multipole of the electrostatic
+potential) evaluated at each nucleus. Unlike the orbital-magnetization properties above, it is
+a **pure ground-state property**: it is computed directly from the converged SCF charge density
+and wavefunctions (`read_file` → `gipaw_setup` → `calc_efg`), with **no converse SCF**, no
+`q_gipaw` k-derivative, and no `lambda_so`/`m_0` perturbation. A single SCF run gives the full
+tensor at every site.
+
+The total EFG is the sum of three contributions (all printed separately by `calc_efg`):
+
+| Term | Meaning |
+|------|---------|
+| `efg_bare`  | Electronic valence contribution from the smooth pseudo charge density, G-space sum `V_{αβ}(R) = (4π/Ω) Σ_{G≠0} ρ(G)(G_α G_β/G² − δ_{αβ}/3) e^{iG·R}/G²` |
+| `efg_ion`   | Ionic (point-nucleus) contribution from the surrounding lattice, via Ewald sum (`ewald_dipole`); self-term excluded |
+| `efg_gipaw` | GIPAW/PAW reconstruction: on-site AE−PS `1/r³` radial integrals contracted with the l=2 Gaunt coefficients `ap(5..9, lm1, lm2)` — restores the aspherical near-nucleus density the pseudo density gets wrong |
+
+`efg_tot = efg_bare + efg_ion + efg_gipaw`, then symmetrized with `symtensor` (which uses the
+crystal symmetry and ties symmetry-equivalent atoms together).
+
+**None of the three terms is generically small or negligible** — the ranking depends on
+ionicity and site symmetry. For ionic, low-symmetry sites (e.g. O in α-quartz) `efg_ion` can
+dominate; the GIPAW term is typically ~2× the bare term because of the `1/r³` weighting near the
+nucleus. The result is **k-point insensitive** (it is a local charge-density property): a coarse
+grid converges it; residual error vs. experiment comes from the pseudopotential/XC/geometry.
+
+Spectroscopic parameters from the principal values (`|Vzz| ≥ |Vyy| ≥ |Vxx|`):
+
+```
+Cq   = e Q V_zz / h            (MHz; quadrupolar coupling constant)
+η    = (V_xx − V_yy) / V_zz    (asymmetry)
+ν_Q  = 3 Cq / (2I(2I−1))       (MHz; quadrupolar frequency, needs I ≥ 1)
+```
+
+`Q` (nuclear quadrupole moment) and `I` (nuclear spin) are inputs per atom type (`q_efg`,
+`i_efg`). `Cq` is computed only when `Q ≠ 0`; `ν_Q` only when `I ≥ 1`.
+
+**Symmetry note:** the EFG path does **not** require `nosym=.true.`/`noinv=.true.`/`nspin=2`.
+A symmetry-reduced k-grid is fine and faster (`symtensor` handles symmetrization). Do not reuse
+an EFG SCF for a converse EPR/NMR run, which still needs the no-symmetry, spin-polarized setup.
+
 ---
 
 ## Repository Layout
@@ -154,7 +197,8 @@ explicit instruction.
 make
 ```
 
-The executable `qe-converse.x` is placed in `bin/`. Links against the pre-installed QE libraries.
+Two executables are placed in `bin/`: `qe-converse.x` (orbital magnetization / NMR / EPR) and
+`qe-efg.x` (electric field gradient). Both link against the pre-installed QE libraries.
 Optional: scaLAPACK or ELPA for improved linear algebra performance.
 
 ---
@@ -181,6 +225,23 @@ qe-converse.x
        │    + GIPAW correction terms (ΔM_NL, ΔM_para, ΔM_dia)
        ├─ compute_dhubbecp    k-derivative of no-phase Hubbard projectors (if DFT+U)
        └─ calc_delta_M_hub    Hubbard U correction to orbital magnetization (if DFT+U)
+```
+
+The EFG driver is much shorter — it is a single-shot ground-state post-processing step
+(no converse SCF):
+
+```
+Pre-requisite: ordinary pw.x SCF (symmetry allowed; no nosym/noinv/nspin=2 needed)
+
+qe-efg.x
+  ├─ read_file            read ground-state data from QE XML output
+  ├─ gipaw_setup          compute GIPAW projectors and radial integrals
+  ├─ calc_efg             EFG tensor at each site = efg_bare + efg_ion + efg_gipaw
+  │    ├─ efg_bare_el        valence electronic term (G-space sum over pseudo ρ)
+  │    ├─ ewald_dipole       ionic term (Ewald sum over nuclear point charges)
+  │    ├─ efg_correction     GIPAW PAW reconstruction (on-site 1/r³, l=2 Gaunt)
+  │    └─ symtensor + principal_axis → Vxx,Vyy,Vzz, Cq, η, ν_Q
+  └─ print_efg_summary    Cq/η/ν_Q table for all atoms
 ```
 
 ### Covariant Finite Difference for du/dk
@@ -214,6 +275,9 @@ communicator. This improves scalability for large supercell calculations.
 | File | Description |
 |------|-------------|
 | `qe-converse.f90` | Main program. Parses input namelist `&input_qeconverse`, broadcasts to MPI ranks, calls `read_file` → `gipaw_setup` → `init_nmr` → `newscf` → `calc_orbital_magnetization`, prints timing. |
+| `qe-efg.f90` | Standalone EFG driver program. Parses namelist `&input_qeefg` (`prefix`, `outdir`, `q_efg`, `i_efg`), then `read_file` → `gipaw_setup` → `calc_efg` → `print_efg_summary`. No converse SCF. Built as `bin/qe-efg.x`. |
+| `efg.f90` | EFG implementation. `calc_efg` assembles `efg_bare` + `efg_ion` + `efg_gipaw`, symmetrizes, diagonalises, prints `Cq`/`η`/`ν_Q`. Internal routines: `efg_bare_el` (G-space valence term), `efg_correction` (GIPAW PAW reconstruction, l=2 Gaunt), `print_efg_summary`. Uses QE `ewald_dipole` for the ionic term. Adapted from qe-gipaw (Ceresoli et al.). |
+| `efg_module.f90` | Module `efg_mod`: stores the symmetrized `efg_tensor(3,3,nat)` for end-of-run summary printing. |
 | `newscf.f90` | Re-runs SCF with `io_level=0`, `starting_wfc='atomic'`. Finds Fermi level for non-metallic systems. |
 | `wfcinit_gipaw.f90` | Generates initial wavefunctions (atomic superposition or random); calls subspace diagonalisation to produce starting eigenstates for GIPAW SCF. |
 | `electrons_gipaw.f90` | Full SCF convergence loop: charge mixing (Broyden), density updates, Hartree/XC, convergence check. |
@@ -361,7 +425,12 @@ MPI and can be run as a plain serial executable.
 
 ## Input Namelist
 
-The single input namelist is `&input_qeconverse`. Key parameters:
+There are two input namelists: `&input_qeconverse` (orbital magnetization / NMR shift / EPR
+g-tensor, driver `qe-converse.x`) and `&input_qeefg` (EFG, driver `qe-efg.x`, see below).
+
+### `&input_qeconverse`
+
+Key parameters:
 
 | Keyword | Type | Default | Description |
 |---------|------|---------|-------------|
@@ -398,6 +467,27 @@ NMR example:
 /
 ```
 
+### `&input_qeefg`
+
+| Keyword | Type | Default | Description |
+|---------|------|---------|-------------|
+| `prefix` | char | `'prefix'` | Must match the pw.x SCF `prefix`. |
+| `outdir` | char | `$ESPRESSO_TMPDIR` or `./` | Must match the pw.x SCF `outdir`. |
+| `q_efg(ntyp)` | real | 0.0 | Nuclear quadrupole moment per atom type, in units of `1e-30 m²` (= 10 mbarn). 1 barn = 100 of these. `Cq` is printed only for types with `q_efg ≠ 0`. |
+| `i_efg(ntyp)` | real | 0.0 | Nuclear spin `I` per atom type. `ν_Q` is printed only for types with `I ≥ 1`. |
+
+Atom types are indexed as in the pw.x `ATOMIC_SPECIES` block. A single ordinary SCF (symmetry
+allowed) is the only prerequisite; one `qe-efg.x` run gives the EFG at every site.
+
+EFG example (α-quartz: type 1 = Si, type 2 = O):
+```fortran
+&input_qeefg
+    prefix = 'quartz', outdir = './scratch/'
+    q_efg(1) = 0.0,    i_efg(1) = 0.5    ! 29Si: I=1/2, no quadrupole
+    q_efg(2) = -2.558, i_efg(2) = 2.5    ! 17O:  Q = -0.02558 b, I=5/2
+/
+```
+
 ---
 
 ## Output Quantities
@@ -415,6 +505,19 @@ NMR example:
 | `delta_g tot` | Total Δg = RMC + RMC(GIPAW) + SO (ppm) |
 | `Chemical shift (ppm)` | Full chemical shielding tensor |
 | `Core shift (ppm)` | Core contribution to shielding |
+
+EFG outputs (`qe-efg.x`):
+
+| Keyword | Description |
+|---------|-------------|
+| `bare electronic EFG` | Valence electronic EFG tensor (Ha/bohr²) |
+| `ionic EFG` | Ionic (Ewald) EFG tensor (Ha/bohr²) |
+| `GIPAW correction` | PAW reconstruction EFG tensor (Ha/bohr²) |
+| `total EFG (symmetrized)` | Sum of the three terms, symmetrized (Ha/bohr²) |
+| `Vxx, Vyy, Vzz` | EFG principal values, ordered `|Vzz| ≥ |Vyy| ≥ |Vxx|`, with eigenvectors |
+| `Cq` | Quadrupolar coupling constant `e Q V_zz / h` (MHz) |
+| `eta` | Asymmetry parameter `(Vxx − Vyy)/Vzz` |
+| `nu_Q` | Quadrupolar frequency `3 Cq / (2I(2I−1))` (MHz; printed for `I ≥ 1`) |
 
 ---
 
