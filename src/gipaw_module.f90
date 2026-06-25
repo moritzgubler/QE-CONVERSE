@@ -51,12 +51,6 @@ MODULE gipaw_module
   
   ! q for the perturbation (in bohrradius^{-1})
   REAL(DP) :: q_gipaw
-  
-  ! q for the EFG
-  REAL(DP) :: q_efg ( ntypx )
-
-  ! nuclear spin I for the EFG (quadrupolar frequency nu_Q)
-  REAL(DP) :: i_efg ( ntypx )
 
   ! restart mode: 'from_scratch' or 'restart'
   CHARACTER(80) :: restart_mode, dudk_method

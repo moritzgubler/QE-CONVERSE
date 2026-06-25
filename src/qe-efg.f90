@@ -25,7 +25,7 @@ PROGRAM qe_efg
   !               needed only for the quadrupolar frequency nu_Q;
   !               omit or set to <=0.5 to skip nu_Q for that type
   !
-  USE gipaw_module,  ONLY : q_efg, i_efg
+  USE efg_mod,       ONLY : q_efg, i_efg
   USE constants,     ONLY : eps12
   USE environment,   ONLY : environment_start, environment_end
   USE io_files,      ONLY : prefix, tmp_dir

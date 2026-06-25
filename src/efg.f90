@@ -31,11 +31,10 @@ SUBROUTINE calc_efg()
   USE ions_base,     ONLY : nat, atm, ityp, zv
   USE symme,         ONLY : symtensor
   USE mp,            ONLY : mp_sum
-  USE gipaw_module,  ONLY : q_efg, i_efg
   USE io_files,      ONLY : iunwfc, nwordwfc
   USE control_flags, ONLY : io_level
   USE buffers,       ONLY : open_buffer, close_buffer
-  USE efg_mod,       ONLY : efg_tensor
+  USE efg_mod,       ONLY : efg_tensor, q_efg, i_efg
 
   IMPLICIT NONE
 
@@ -204,8 +203,7 @@ SUBROUTINE print_efg_summary()
   USE io_global,    ONLY : stdout
   USE constants,    ONLY : angstrom_au, rytoev, electronvolt_si
   USE ions_base,    ONLY : nat, atm, ityp
-  USE gipaw_module, ONLY : q_efg, i_efg
-  USE efg_mod,      ONLY : efg_tensor
+  USE efg_mod,      ONLY : efg_tensor, q_efg, i_efg
 
   IMPLICIT NONE
   integer :: na

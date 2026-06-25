@@ -237,7 +237,7 @@ SUBROUTINE print_clock_gipaw
   CALL print_clock( 'add_so_valence' )
   call print_clock( 'add_so_Fnl' )
   write(stdout,*)
-  write(stdout,*) '    orbital magnetization / g-tensor / NMR:'
+  write(stdout,*) '    g-tensor:'
   write(stdout,*)
   call print_clock ('compute_dudk')
   call print_clock ('orbital_magnetization')
