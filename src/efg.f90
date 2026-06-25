@@ -446,7 +446,14 @@ SUBROUTINE efg_correction(efg_corr)
   call mp_sum(efg_c, inter_pool_comm)
 #endif
 
-  ! convert from spherical harmonics to Cartesian tensor components
+  ! convert from spherical harmonics to Cartesian tensor components.
+  ! Sign convention: QE's real harmonics (upflib/ylmr2.f90) carry the
+  ! Condon-Shortley (-1)^m phase, so for l=2 the m=1 functions are
+  ! lm=6 ~ -xz and lm=7 ~ -yz, while m=2 gives lm=8 ~ +(x^2-y^2) and
+  ! lm=9 ~ +xy. The -sqrt(3) factors on the (1,3)/(2,3) components undo that
+  ! phase so V_xz/V_yz get the right sign; the m=0,2 components (efg_c 5,8,9)
+  ! need no flip. The Gaunt array ap uses the same ylmr2 convention, so efg_c
+  ! is consistent with this conversion.
   efg_corr(1,1,:) =  sqrt(3.d0) * real(efg_c(8,:)) - real(efg_c(5,:))
   efg_corr(2,2,:) = -sqrt(3.d0) * real(efg_c(8,:)) - real(efg_c(5,:))
   efg_corr(3,3,:) =  2.d0 * real(efg_c(5,:))
