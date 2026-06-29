@@ -22,8 +22,22 @@ MODFLAGS = $(BASEMOD_FLAGS) \
            $(MOD_FLAG)$(QE_SOURCE)/LR_Modules \
            $(MOD_FLAG).
 
+EFG_OBJS = efg_module.o \
+           efg.o \
+           gipaw_module.o \
+           gipaw_setup.o \
+           init_gipaw_1.o \
+           init_gipaw_2.o \
+           init_us_2_no_phase.o \
+           paw_gipaw.o \
+           stop_code.o \
+           util.o \
+           qe-efg.o
+
 CONVERSE_OBJS = electrons_gipaw.o \
 		set_dvrs.o \
+                efg_module.o \
+                efg.o \
                 c_bands_gipaw.o \
                 h_psi_gipaw.o \
                 stop_code.o \
@@ -66,7 +80,7 @@ QEMODS = $(QE_SOURCE)/Modules/libqemod.a \
 
 PWOBJS = $(QE_SOURCE)/PW/src/libpw.a
 
-all: qe-converse.x
+all: qe-converse.x qe-efg.x
 
 make_lr_modules:
 	make -C $(QE_SOURCE)/LR_Modules
@@ -74,8 +88,11 @@ make_lr_modules:
 qe-converse.x: $(CONVERSE_OBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ $(CONVERSE_OBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 
+qe-efg.x: $(EFG_OBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ $(EFG_OBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
+
 clean:
-	-/bin/rm -f qe-converse.x *.o *.F90 *__genmod.f90 *.d *.mod *.i *.L
+	-/bin/rm -f qe-converse.x qe-efg.x *.o *.F90 *__genmod.f90 *.d *.mod *.i *.L
 
 distclean: clean
 	-/bin/rm -f Makefile make.depend

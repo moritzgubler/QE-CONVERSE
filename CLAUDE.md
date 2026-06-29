@@ -14,6 +14,8 @@ original converse routines from the obsolete PWscf 3.2 code.
 Derived properties:
 - **NMR chemical shielding tensors** (¹⁷O, ²⁹Si, ²⁷Al, …)
 - **EPR g-tensor** deviations Δg
+- **Electric field gradient (EFG) tensors** and NMR/NQR quadrupolar parameters (`Cq`, `η`, `ν_Q`),
+  via the standalone `qe-efg.x` driver (a ground-state property, no converse SCF needed)
 
 Scope: isolated molecules and periodic solids. Functionals: LDA, GGA. Pseudopotentials: GIPAW
 norm-conserving (Trouiller-Martins + GIPAW reconstruction required).
@@ -37,7 +39,7 @@ and eigenvectors, `ε_F` the Fermi level, and `α = 1/c` the fine-structure cons
 
 ### Total Orbital Magnetization (GIPAW decomposition)
 
-The full orbital magnetization splits into four terms:
+The full orbital magnetization splits into five terms:
 
 | Term | Meaning |
 |------|---------|
@@ -45,8 +47,58 @@ The full orbital magnetization splits into four terms:
 | `ΔM_NL` | Non-local pseudopotential correction |
 | `ΔM_para` | Paramagnetic GIPAW correction (uses `F_R^NL` for EPR, `K_R^NL` for NMR) |
 | `ΔM_dia` | Diamagnetic GIPAW correction (uses `E_R^NL` for EPR, `J_R^NL` for NMR) |
+| `ΔM_Hub` | Hubbard U correction (active when `lda_plus_u=.true.` and `lhub_magnetization=.true.`) |
 
-The output keywords `M_LC`, `M_IC`, and `Delta_M` correspond to these terms.
+`M_total = M_LC + M_IC + ΔM_NL + ΔM_para + ΔM_dia + ΔM_Hub`. The output keyword `Delta_M`
+groups `ΔM_NL + ΔM_para + ΔM_dia + ΔM_Hub`; `Delta_M_hubbard` is printed separately.
+
+### Hubbard U Contribution to Orbital Magnetization (DFT+U)
+
+The Hubbard potential on site `I` is separable:
+
+```
+V_I^Hub = Σ_{mm'} |φ_{Im}^k> V_{mm'}^I <φ_{Im'}^k|
+```
+
+where `V_{mm'}^I = U^I [δ_{mm'}/2 - n_{mm'}^{I,σ}]` is the Hubbard potential matrix
+(stored as `v%ns(m,m',σ,na)` in QE) and `φ_{Im}` are the Hubbard projector orbitals
+(atomic or orthogonalized atomic; `pseudo`-type is excluded).
+
+Starting from the same GIPAW commutator expression as for the bare non-local term, one
+arrives at an identical structure with KB projectors replaced by Hubbard projectors:
+
+```
+ΔM_Hub,γ = -(α/2) Σ_{n,k} f_{nk} Σ_I Σ_{mm'} Σ_{μν} ε_{γμν}
+              Im[ <u_{nk}|∂_{k_μ} φ̃_{Im}^k> V_{mm'}^I <∂_{k_ν} φ̃_{Im'}^k|u_{nk}> ]
+```
+
+**No-phase convention for Hubbard projectors.** The tilde `φ̃` denotes the no-phase
+projector, defined by stripping the global atomic-center phase `e^{-ik·R_I}` from the
+full-phase projector produced by `orthoUwfc_k`. In reciprocal space:
+
+```
+φ̃^{k,I}_m(G) = e^{-iG·R_I} φ_m(k+G)        (no e^{-ik·R_I} factor)
+```
+
+This ensures that `∂_{k_μ} φ̃^{k,I}_m = -i(r_μ - R_{I,μ}) φ̃^{k,I}_m`, i.e., the
+derivative generates the relative position operator from the atomic center, not the
+absolute position. Without stripping the phase, the derivative would produce a spurious
+term proportional to `R_{I,μ}`.
+
+**Implementation in `calc_orbital_magnetization.f90`:**
+- `compute_dhubbecp` — computes `dhubbecp(m,n,ipol) = d/dk_ipol <φ̃_{Im}^k | u_{nk}>`
+  via central finite differences. Calls `orthoUwfc_k` at `k±δk`, then multiplies by the
+  phase `e^{+i(k±δk)·R_I}` to strip the Bloch center phase, then calls `ZGEMM` to
+  form the overlap with `evc`.
+- `calc_delta_M_hub` — evaluates the double sum over `m,m'` and bands, contracting
+  `conjg(dhubbecp(m,n,ii)) * dhubbecp(m',n,jj)` with `v%ns`, and accumulates
+  `delta_M_hub(kk) -= 2·Im(tmp)` (same sign convention as `delta_M_bare`).
+
+**Supported Hubbard projector types:** `atomic` and `ortho-atomic`. The `pseudo` type
+is explicitly excluded (Kleinman-Bylander projectors already enter via `ΔM_NL`).
+
+**DFT+U+V (inter-site interactions):** **not yet implemented**. The current code handles
+on-site `U` only.
 
 ### EPR g-tensor
 
@@ -79,6 +131,47 @@ The chemical shielding tensor is:
 
 where `Ω` is the cell volume. Again three runs are needed (one per dipole direction).
 
+### Electric Field Gradient (EFG)
+
+The EFG is the traceless rank-2 tensor `V_{αβ}` (the l=2 multipole of the electrostatic
+potential) evaluated at each nucleus. Unlike the orbital-magnetization properties above, it is
+a **pure ground-state property**: it is computed directly from the converged SCF charge density
+and wavefunctions (`read_file` → `gipaw_setup` → `calc_efg`), with **no converse SCF**, no
+`q_gipaw` k-derivative, and no `lambda_so`/`m_0` perturbation. A single SCF run gives the full
+tensor at every site.
+
+The total EFG is the sum of three contributions (all printed separately by `calc_efg`):
+
+| Term | Meaning |
+|------|---------|
+| `efg_bare`  | Electronic valence contribution from the smooth pseudo charge density, G-space sum `V_{αβ}(R) = (4π/Ω) Σ_{G≠0} ρ(G)(G_α G_β/G² − δ_{αβ}/3) e^{iG·R}/G²` |
+| `efg_ion`   | Ionic (point-nucleus) contribution from the surrounding lattice, via Ewald sum (`ewald_dipole`); self-term excluded |
+| `efg_gipaw` | GIPAW/PAW reconstruction: on-site AE−PS `1/r³` radial integrals contracted with the l=2 Gaunt coefficients `ap(5..9, lm1, lm2)` — restores the aspherical near-nucleus density the pseudo density gets wrong |
+
+`efg_tot = efg_bare + efg_ion + efg_gipaw`, then symmetrized with `symtensor` (which uses the
+crystal symmetry and ties symmetry-equivalent atoms together).
+
+**None of the three terms is generically small or negligible** — the ranking depends on
+ionicity and site symmetry. For ionic, low-symmetry sites (e.g. O in α-quartz) `efg_ion` can
+dominate; the GIPAW term is typically ~2× the bare term because of the `1/r³` weighting near the
+nucleus. The result is **k-point insensitive** (it is a local charge-density property): a coarse
+grid converges it; residual error vs. experiment comes from the pseudopotential/XC/geometry.
+
+Spectroscopic parameters from the principal values (`|Vzz| ≥ |Vyy| ≥ |Vxx|`):
+
+```
+Cq   = e Q V_zz / h            (MHz; quadrupolar coupling constant)
+η    = (V_xx − V_yy) / V_zz    (asymmetry)
+ν_Q  = 3 Cq / (2I(2I−1))       (MHz; quadrupolar frequency, needs I ≥ 1)
+```
+
+`Q` (nuclear quadrupole moment) and `I` (nuclear spin) are inputs per atom type (`q_efg`,
+`i_efg`). `Cq` is computed only when `Q ≠ 0`; `ν_Q` only when `I ≥ 1`.
+
+**Symmetry note:** the EFG path does **not** require `nosym=.true.`/`noinv=.true.`/`nspin=2`.
+A symmetry-reduced k-grid is fine and faster (`symtensor` handles symmetrization). Do not reuse
+an EFG SCF for a converse EPR/NMR run, which still needs the no-symmetry, spin-polarized setup.
+
 ---
 
 ## Repository Layout
@@ -104,7 +197,8 @@ explicit instruction.
 make
 ```
 
-The executable `qe-converse.x` is placed in `bin/`. Links against the pre-installed QE libraries.
+Two executables are placed in `bin/`: `qe-converse.x` (orbital magnetization / NMR / EPR) and
+`qe-efg.x` (electric field gradient). Both link against the pre-installed QE libraries.
 Optional: scaLAPACK or ELPA for improved linear algebra performance.
 
 ---
@@ -125,10 +219,29 @@ qe-converse.x
   │    └─ electrons_gipaw    SCF loop (Davidson diagonalisation)
   │         └─ c_bands_gipaw diagonalise H(k) for each k-point
   └─ calc_orbital_magnetization
-       ├─ compute_dudk_new   covariant du/dk via finite differences
-       │    └─ compute_u_kq  diagonalise H(k+q) for each k and q=±q_gipaw·x̂,ŷ,ẑ
-       └─ calc_delta_M_bare  bare orbital magnetization (Berry curvature integral)
-            + GIPAW correction terms (ΔM_NL, ΔM_para, ΔM_dia)
+       ├─ compute_dudk_new    covariant du/dk via finite differences
+       │    └─ compute_u_kq   diagonalise H(k+q) for each k and q=±q_gipaw·x̂,ŷ,ẑ
+       ├─ calc_delta_M_bare   bare orbital magnetization (Berry curvature integral)
+       │    + GIPAW correction terms (ΔM_NL, ΔM_para, ΔM_dia)
+       ├─ compute_dhubbecp    k-derivative of no-phase Hubbard projectors (if DFT+U)
+       └─ calc_delta_M_hub    Hubbard U correction to orbital magnetization (if DFT+U)
+```
+
+The EFG driver is much shorter — it is a single-shot ground-state post-processing step
+(no converse SCF):
+
+```
+Pre-requisite: ordinary pw.x SCF (symmetry allowed; no nosym/noinv/nspin=2 needed)
+
+qe-efg.x
+  ├─ read_file            read ground-state data from QE XML output
+  ├─ gipaw_setup          compute GIPAW projectors and radial integrals
+  ├─ calc_efg             EFG tensor at each site = efg_bare + efg_ion + efg_gipaw
+  │    ├─ efg_bare_el        valence electronic term (G-space sum over pseudo ρ)
+  │    ├─ ewald_dipole       ionic term (Ewald sum over nuclear point charges)
+  │    ├─ efg_correction     GIPAW PAW reconstruction (on-site 1/r³, l=2 Gaunt)
+  │    └─ symtensor + principal_axis → Vxx,Vyy,Vzz, Cq, η, ν_Q
+  └─ print_efg_summary    Cq/η/ν_Q table for all atoms
 ```
 
 ### Covariant Finite Difference for du/dk
@@ -162,6 +275,9 @@ communicator. This improves scalability for large supercell calculations.
 | File | Description |
 |------|-------------|
 | `qe-converse.f90` | Main program. Parses input namelist `&input_qeconverse`, broadcasts to MPI ranks, calls `read_file` → `gipaw_setup` → `init_nmr` → `newscf` → `calc_orbital_magnetization`, prints timing. |
+| `qe-efg.f90` | Standalone EFG driver program. Parses namelist `&input_qeefg` (`prefix`, `outdir`, `q_efg`, `i_efg`), then `read_file` → `gipaw_setup` → `calc_efg` → `print_efg_summary`. No converse SCF. Built as `bin/qe-efg.x`. |
+| `efg.f90` | EFG implementation. `calc_efg` assembles `efg_bare` + `efg_ion` + `efg_gipaw`, symmetrizes, diagonalises, prints `Cq`/`η`/`ν_Q`. Internal routines: `efg_bare_el` (G-space valence term), `efg_correction` (GIPAW PAW reconstruction, l=2 Gaunt), `print_efg_summary`. Uses QE `ewald_dipole` for the ionic term. Adapted from qe-gipaw (Ceresoli et al.). |
+| `efg_module.f90` | Module `efg_mod`: stores the symmetrized `efg_tensor(3,3,nat)` for end-of-run summary printing. |
 | `newscf.f90` | Re-runs SCF with `io_level=0`, `starting_wfc='atomic'`. Finds Fermi level for non-metallic systems. |
 | `wfcinit_gipaw.f90` | Generates initial wavefunctions (atomic superposition or random); calls subspace diagonalisation to produce starting eigenstates for GIPAW SCF. |
 | `electrons_gipaw.f90` | Full SCF convergence loop: charge mixing (Broyden), density updates, Hartree/XC, convergence check. |
@@ -172,9 +288,9 @@ communicator. This improves scalability for large supercell calculations.
 | `compute_dudk_new.f90` | Computes covariant du/dk: calls `compute_u_kq` for each displaced k±q, builds overlap matrix, inverts, assembles dual states, saves result. Supports in-memory (`dudk_storage`) or disk I/O. After calling `compute_u_kq(ik,0)`, saves `evc` back to `iunwfc`. Forces in-memory storage when `nproc_pool > 1` (disk I/O is not safe with distributed G-vectors). |
 | `compute_u_kq.f90` | Diagonalises H(k+q). Reads `evc` from `iunwfc` as initial guess (line 133); after diagonalisation, restores `evc` from `iunwfc` (lines 193-196) to not corrupt the k-point buffer. |
 | `dudk_storage.f90` | Module providing in-memory buffer management for du/dk matrices; allocates/deallocates storage and handles retrieval for better performance than disk I/O. |
-| `calc_orbital_magnetization.f90` | Computes all orbital magnetization terms: LC, IC (Berry curvature formula), and GIPAW corrections (`delta_M_bare`, `delta_M_para`, `delta_M_dia`) for both EPR and NMR modes. Contains band-group MPI parallelisation over `ibnd`. |
-| `orbital_magnetization.f90` | Module storing orbital magnetization results (`M_LC`, `M_IC`, `Delta_M`, total) and physical constants (α, g_e = 2.002319, a2gp8). |
-| `gipaw_module.f90` | Global GIPAW parameters: q-vector (`q_gipaw`), convergence thresholds, SO coupling strengths (`lambda_so`), radial integrals, L-operators, projector data. |
+| `calc_orbital_magnetization.f90` | Computes all orbital magnetization terms: LC, IC (Berry curvature formula), and GIPAW corrections (`delta_M_bare`, `delta_M_para`, `delta_M_dia`, `delta_M_hub`) for both EPR and NMR modes. Contains internal subroutines `compute_dhubbecp` and `calc_delta_M_hub` for the DFT+U contribution. Contains band-group MPI parallelisation over `ibnd`. |
+| `orbital_magnetization.f90` | Module storing orbital magnetization results (`M_LC`, `M_IC`, `Delta_M`, `delta_M_hub`, total) and physical constants (α, g_e = 2.002319, a2gp8). |
+| `gipaw_module.f90` | Global GIPAW parameters: q-vector (`q_gipaw`), convergence thresholds, SO coupling strengths (`lambda_so`), radial integrals, L-operators, projector data. Also holds `lhub_magnetization` flag. |
 | `gipaw_setup.f90` | Initialises GIPAW infrastructure: reads UPF pseudopotential data, sets up radial integrals for NMR/EPR (`f_Rnm`, `e_Rnm`, `k_Rnm`, `j_Rnm`), L-operator matrices, spline interpolations. |
 | `init_gipaw_1.f90` | Constructs GIPAW projectors `ρ̃_{R,n}` from UPF data; computes projection coefficients and orthogonalisation matrices. |
 | `init_gipaw_2.f90` | Computes GIPAW projector coefficients in reciprocal space with structure factors, phase factors, and spherical harmonics. |
@@ -233,6 +349,7 @@ tests/
     nacl_nmr/                   serial NMR chemical shift test (NaCl)
     nacl_nmr_kpool/             parallel NMR chemical shift test (NaCl, npool=4, 8 MPI ranks)
     quartz/                     serial NMR chemical shift test (quartz Si, O)
+    licoo2_U/                   parallel DFT+U NMR test (LiCoO₂, npool=9, 9 MPI ranks; checks Li and Co shieldings)
     <test>/
       run.sh                    runs pw.x SCF + qe-converse.x, then calls check script
       reference/                stored reference output files (generated with serial run.sh)
@@ -308,7 +425,12 @@ MPI and can be run as a plain serial executable.
 
 ## Input Namelist
 
-The single input namelist is `&input_qeconverse`. Key parameters:
+There are two input namelists: `&input_qeconverse` (orbital magnetization / NMR shift / EPR
+g-tensor, driver `qe-converse.x`) and `&input_qeefg` (EFG, driver `qe-efg.x`, see below).
+
+### `&input_qeconverse`
+
+Key parameters:
 
 | Keyword | Type | Default | Description |
 |---------|------|---------|-------------|
@@ -323,6 +445,7 @@ The single input namelist is `&input_qeconverse`. Key parameters:
 | `lambda_so(1..3)` | real | 0.0 | Spin-orbit coupling direction for EPR. Set one component ≠ 0 per run. |
 | `m_0(1..3)` | real | 0.0 | Nuclear dipole moment direction for NMR. Set one component ≠ 0 per run. |
 | `m_0_atom` | int | 0 | Index of the atom carrying the NMR dipole. |
+| `lhub_magnetization` | logical | `.true.` | Compute DFT+U Hubbard contribution to orbital magnetization. Only active when `lda_plus_u=.true.` in the SCF and projector type is not `pseudo`. |
 
 EPR example:
 ```fortran
@@ -344,6 +467,27 @@ NMR example:
 /
 ```
 
+### `&input_qeefg`
+
+| Keyword | Type | Default | Description |
+|---------|------|---------|-------------|
+| `prefix` | char | `'prefix'` | Must match the pw.x SCF `prefix`. |
+| `outdir` | char | `$ESPRESSO_TMPDIR` or `./` | Must match the pw.x SCF `outdir`. |
+| `q_efg(ntyp)` | real | 0.0 | Nuclear quadrupole moment per atom type, in units of `1e-30 m²` (= 10 mbarn). 1 barn = 100 of these. `Cq` is printed only for types with `q_efg ≠ 0`. |
+| `i_efg(ntyp)` | real | 0.0 | Nuclear spin `I` per atom type. `ν_Q` is printed only for types with `I ≥ 1`. |
+
+Atom types are indexed as in the pw.x `ATOMIC_SPECIES` block. A single ordinary SCF (symmetry
+allowed) is the only prerequisite; one `qe-efg.x` run gives the EFG at every site.
+
+EFG example (α-quartz: type 1 = Si, type 2 = O):
+```fortran
+&input_qeefg
+    prefix = 'quartz', outdir = './scratch/'
+    q_efg(1) = 0.0,    i_efg(1) = 0.5    ! 29Si: I=1/2, no quadrupole
+    q_efg(2) = -2.558, i_efg(2) = 2.5    ! 17O:  Q = -0.02558 b, I=5/2
+/
+```
+
 ---
 
 ## Output Quantities
@@ -352,14 +496,28 @@ NMR example:
 |---------|-------------|
 | `M_LC` | Local Circulation orbital magnetization (a.u.) |
 | `M_IC` | Itinerant Circulation orbital magnetization (a.u.) |
-| `Delta_M` | Non-local + paramagnetic + diamagnetic GIPAW correction (a.u.) |
-| `M_total` | Sum of `M_LC + M_IC + Delta_M` |
+| `Delta_M` | Sum of non-local, paramagnetic, diamagnetic, and Hubbard GIPAW corrections (a.u.) |
+| `Delta_M_hubbard` | Hubbard U contribution to `Delta_M` (a.u.), printed separately for diagnostics |
+| `M_total` | Sum of `M_LC + M_IC + Delta_M` (includes Hubbard if active) |
 | `delta_g RMC` | Relativistic mass correction to Δg (ppm) |
 | `delta_g RMC (GIPAW)` | GIPAW correction to `delta_g RMC` (ppm) |
 | `delta_g SO` | SO coupling contribution to Δg (ppm) |
 | `delta_g tot` | Total Δg = RMC + RMC(GIPAW) + SO (ppm) |
 | `Chemical shift (ppm)` | Full chemical shielding tensor |
 | `Core shift (ppm)` | Core contribution to shielding |
+
+EFG outputs (`qe-efg.x`):
+
+| Keyword | Description |
+|---------|-------------|
+| `bare electronic EFG` | Valence electronic EFG tensor (Ha/bohr²) |
+| `ionic EFG` | Ionic (Ewald) EFG tensor (Ha/bohr²) |
+| `GIPAW correction` | PAW reconstruction EFG tensor (Ha/bohr²) |
+| `total EFG (symmetrized)` | Sum of the three terms, symmetrized (Ha/bohr²) |
+| `Vxx, Vyy, Vzz` | EFG principal values, ordered `|Vzz| ≥ |Vyy| ≥ |Vxx|`, with eigenvectors |
+| `Cq` | Quadrupolar coupling constant `e Q V_zz / h` (MHz) |
+| `eta` | Asymmetry parameter `(Vxx − Vyy)/Vzz` |
+| `nu_Q` | Quadrupolar frequency `3 Cq / (2I(2I−1))` (MHz; printed for `I ≥ 1`) |
 
 ---
 

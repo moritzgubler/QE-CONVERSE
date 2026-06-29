@@ -9,6 +9,7 @@ build:
 	$(MAKE) -C src
 	@mkdir -p bin
 	@cd bin && ln -sf ../src/qe-converse.x .
+	@cd bin && ln -sf ../src/qe-efg.x .
 
 test:
 	$(MAKE) -C tests QE_SRC_DIR=$(QE_SOURCE)
@@ -20,7 +21,7 @@ test-integration:
 clean:
 	@echo "Cleaning qe-converse..."
 	if test -s src/Makefile ; then ( $(MAKE) -C src clean ); fi
-	-/bin/rm -f bin/qe-converse.x
+	-/bin/rm -f bin/qe-converse.x bin/qe-efg.x
 
 distclean:
 	$(MAKE) -C src distclean
